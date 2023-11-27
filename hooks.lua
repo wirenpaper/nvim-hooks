@@ -33,10 +33,19 @@ local function rehook()
 	--if not file_exists(hooks) then print("hooks doesn't exist") end
 end
 
-function lines_from(file)
+kill_flag = false
+function lines_from(file, n)
+	dups = {}
 	if not file_exists(file) then return {} end
 	local lines = {}
 	for line in io.lines(file) do
+		if dups[line] ~= nil and dups[line] ~= ""  then
+			print("DUPLICATE hooks:"..#lines+1)
+			kill_flag = true
+			return
+		else
+			dups[line] = line
+		end
 		lines[#lines + 1] = line
 	end
 	return lines
@@ -99,8 +108,10 @@ local function hook_mode2(n, args)
 				set_dir_mode2(path, args)
 			end
 		end
+	elseif file_exists(path) then
+		print("FILES CANNOT BE LABELED hooks:"..n)
 	else
-		print("files cannot be labeled")
+		print("MALFORMED hooks:"..n)
 	end
 end
 
@@ -125,14 +136,35 @@ local function hook_mode1(n)
 		else
 			vim.api.nvim_set_current_buf(buffers[path])
 		end
+	elseif path == nil then
+		print("UNSET hooks:"..n)
+	else
+		print("MALFORMED hooks:"..n)
 	end
 end
 
 local function hook(n)
 	vim.cmd("on")
-	local opts = lines_from(hooks)
-	if opts == nil then print("hooks doesn't exist") return {} end
+
+	if file_exists(hooks) == false then
+		print("HOOKS NOT FOUND")
+		return
+	end
+
+	local opts = lines_from(hooks, n)
+
+	if kill_flag == true then
+		kill_flag = false
+		return
+	end
+
 	path, args = format_path(opts[n])
+
+	if path == "" then
+		print("UNSET hooks:"..n)
+		return
+	end
+
 	if args == nil then hook_mode1(n) else hook_mode2(n, args) end
 end
 
