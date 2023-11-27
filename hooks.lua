@@ -29,8 +29,7 @@ local function rehook()
 	vim.cmd("set autochdir")
 	local path = get_buffer_path()
 	hooks = path..'/hooks'
-	print(hooks)
-	--if not file_exists(hooks) then print("hooks doesn't exist") end
+	if not file_exists(hooks) then print("hooks doesn't exist") end
 end
 
 kill_flag = false
@@ -81,7 +80,7 @@ local function hook_term()
 	hook_file()
 	vim.cmd("sp")
 	vim.cmd("wincmd j")
-	vim.cmd("te")
+	vim.cmd("te cd "..path.." && $SHELL")
 end
 
 local function set_dir_mode2(path, args)
