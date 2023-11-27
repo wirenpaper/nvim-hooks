@@ -1,0 +1,143 @@
+function file_exists(path)
+	if path ~= nil then
+		local f=io.open(path,"r")
+		if f~=nil then io.close(f) return true else return false end
+	end
+end
+
+local function get_binding(n)
+	if n == 1 then
+		return "fj"
+	end
+	if n == 2 then
+		return "fk"
+	end
+	if n == 3 then
+		return "fl"
+	end
+	if n == 4 then
+		return "f;"
+	end
+	if n == 5 then
+		return "fm"
+	end
+	if n == 6 then
+		return "f,"
+	end
+	if n == 7 then
+		return "f."
+	end
+	if n == 8 then
+		return "f/"
+	end
+end
+
+local function set_keymap(n,j)
+	binding = get_binding(j)
+        vim.cmd("nnoremap "..binding.." :tabn"..n.."<cr>")
+end
+
+local function get_buffer_path()
+	path = vim.api.nvim_buf_get_name(0)
+	if vim.fn.isdirectory(path) ~= 0 then
+		return path
+	elseif file_exists(path) then
+		return vim.fn.fnamemodify(path, ':h')
+	else
+		return vim.loop.cwd()
+	end
+end
+
+kill = {}
+function lines_from(path)
+	vim.cmd("silent on")
+	if not file_exists(workspace) then print("create workspace.hooks") return {} end
+	if not file_exists(path) then return {} end
+
+	local i=1
+	local j=1
+	local lines = {}
+	local first_tab = false
+	vim.cmd("silent tabonly")
+	for line in io.lines(path) do
+		if vim.fn.isdirectory(line) ~= 0 then
+			set_keymap(i,j)
+			if first_tab == false then
+				vim.cmd("te cd "..line.." && $SHELL")
+				first_tab = true
+			else
+				vim.cmd("tabe term://"..line.."/zsh")
+			end
+			i=i+1
+		elseif file_exists(line) then
+			set_keymap(i,j)
+			if first_tab == false then
+				vim.cmd("e "..line)
+				first_tab = true
+			else
+				vim.cmd("tabnew "..line)
+			end
+			i=i+1
+		end
+		j=j+1
+	end
+	vim.cmd("tabn1")
+	if kill == true then vim.cmd("q") end
+end
+
+path = get_buffer_path()
+workspace = path..'/workspace.hooks'
+
+local function update_path()
+	vim.cmd("set autochdir")
+	path = get_buffer_path()
+	workspace = path..'/workspace.hooks'
+	print(path)
+	if not file_exists(workspace) then print("workspace.hooks doesn't exist") end
+end
+
+local function reload()
+	update_path()
+	lines_from(workspace)
+end
+
+vim.api.nvim_create_user_command("Workspace", function() lines_from(workspace) end, {})
+vim.api.nvim_create_user_command("WorkspaceUpdate", function() update_path() end, {})
+vim.api.nvim_create_user_command("WorkspaceReload", function() reload() end, {})
+vim.keymap.set('n', 'fd', function() vim.cmd("e "..path.."/workspace.hooks") end)
+
+tabs_info = {}
+local function test()
+	local tabs = vim.api.nvim_list_tabpages() -- get a list of all tab pages
+	for i, tab in ipairs(tabs) do -- loop through each tab page
+		local win = vim.api.nvim_tabpage_get_win(tab)
+		local buf = vim.api.nvim_win_get_buf(win)
+		local tuple = {win, buf}
+		table.insert(tabs_info, tuple)
+	end
+	local third_tuple = tabs_info[3]
+	local first_element = third_tuple[1]
+	for _, tup in ipairs(tabs_info) do
+		print(tup[1])
+		print(tup[2])
+	end
+end
+vim.api.nvim_create_user_command("WorkspaceTest", function() test() end, {})
+
+local function set()
+	local target = tabs_info[3]
+	local replace = tabs_info[3]
+	vim.api.nvim_win_set_buf(target[1], replace[2])
+end
+vim.api.nvim_create_user_command("WorkspaceSet", function() set() end, {})
+
+local function workspace_term()
+	vim.cmd("on")
+	vim.cmd("e "..path.."/workspace.hooks")
+	vim.cmd("sp")
+	vim.cmd("wincmd j")
+	vim.cmd("set autochdir")
+	vim.cmd("te")
+end
+
+vim.keymap.set('n', 'fs', function() workspace_term() end)
