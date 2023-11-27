@@ -136,8 +136,6 @@ local function hook_mode1(n)
 		else
 			vim.api.nvim_set_current_buf(buffers[path])
 		end
-	elseif path == nil then
-		print("UNSET hooks:"..n)
 	else
 		print("MALFORMED hooks:"..n)
 	end
@@ -145,32 +143,24 @@ end
 
 local function hook(n)
 	vim.cmd("silent on")
-
 	if file_exists(hooks) == false then
 		print("HOOKS NOT FOUND")
 		return
 	end
-
 	local opts = lines_from(hooks, n)
-
-	if opts[n] == nil then
-		print("UNSET hooks:"..n)
-		return
-	end
-
 	if kill_flag == true then
 		kill_flag = false
 		return
 	end
-
-
+	if opts[n] == nil then
+		print("UNSET hooks:"..n)
+		return
+	end
 	path, args = format_path(opts[n])
-
 	if path == "" then
 		print("UNSET hooks:"..n)
 		return
 	end
-
 	if args == nil then hook_mode1(n) else hook_mode2(n, args) end
 end
 
