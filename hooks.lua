@@ -144,7 +144,7 @@ local function hook_mode1(n)
 end
 
 local function hook(n)
-	vim.cmd("on")
+	vim.cmd("silent on")
 
 	if file_exists(hooks) == false then
 		print("HOOKS NOT FOUND")
@@ -153,10 +153,16 @@ local function hook(n)
 
 	local opts = lines_from(hooks, n)
 
+	if opts[n] == nil then
+		print("UNSET hooks:"..n)
+		return
+	end
+
 	if kill_flag == true then
 		kill_flag = false
 		return
 	end
+
 
 	path, args = format_path(opts[n])
 
