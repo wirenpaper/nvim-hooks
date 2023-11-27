@@ -80,7 +80,8 @@ local function hook_term()
 	hook_file()
 	vim.cmd("sp")
 	vim.cmd("wincmd j")
-	vim.cmd("te cd "..path.." && $SHELL")
+	--vim.cmd("te cd "..path.." && $SHELL")
+	vim.cmd("te")
 end
 
 local function set_dir_mode2(path, args)
