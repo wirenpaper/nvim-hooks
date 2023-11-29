@@ -37,8 +37,10 @@ local function rehook()
 end
 
 kill_flag = false
+file_line_number = {}
 function lines_from(file, n)
 	dups = {}
+	file_line_number = {}
 	if not file_exists(file) then return {} end
 	local lines = {}
 	for line in io.lines(file) do
@@ -50,10 +52,10 @@ function lines_from(file, n)
 			dups[line] = line
 		end
 		lines[#lines + 1] = line
+		file_line_number[line] = #lines
 	end
 	return lines
 end
-
 
 local function clean_spaces(str)
 	local str = string.gsub(str, " [^%S\n]+", " ")
@@ -72,8 +74,41 @@ local function format_path(str)
 	end
 end
 
+local function signs(n)
+	if n == 0 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(-1)]])
+	elseif n == 1 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(0)]])
+	elseif n == 2 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(1)]])
+	elseif n == 3 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(2)]])
+	elseif n == 4 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(3)]])
+	elseif n == 5 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(4)]])
+	elseif n == 6 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(5)]])
+	elseif n == 7 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(6)]])
+	elseif n == 8 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(7)]])
+	end
+end
+
+lines_from(hooks,1)
 local function hook_file()
+	--if file_exists(current_buffer) == true then
 	vim.cmd("on")
+	local path, args = format_path(current_buffer)
+	if vim.fn.isdirectory(path) == 0 then 
+		local n = file_line_number[vim.api.nvim_buf_get_name(0)]
+		if n ~= nil then
+			signs(n)
+		else
+			signs(0)
+		end
+	end
 	vim.cmd("e "..hooks)
 	bufname[vim.api.nvim_get_current_buf()] = hooks
 end
@@ -149,12 +184,12 @@ end
 vim.cmd([[
 	function! PlaceSigns(n)
 		let signs = ['j', 'k', 'l', ';', 'm', ',', '.', '/', '!!', '!!', '!!', '!!', '!!']
-		let i = 1
 		let current_buffer = bufnr('%')
 		if a:n != -1
 			let signs[a:n] = signs[a:n].'*'
 		endif
       
+		let i = 1
 		for sign in signs
 			execute 'sign define sign' . i . ' text=' . sign . ' texthl=Search'
 			execute 'sign place ' . i . ' line=' . i . ' name=sign' . i . ' buffer=' . 
@@ -164,26 +199,6 @@ vim.cmd([[
 	endfunction
 ]])
 
-
-local function signs(n)
-	if n == 1 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(0)]])
-	elseif n == 2 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(1)]])
-	elseif n == 3 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(2)]])
-	elseif n == 4 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(3)]])
-	elseif n == 5 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(4)]])
-	elseif n == 6 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(5)]])
-	elseif n == 7 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(6)]])
-	elseif n == 8 then
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(7)]])
-	end
-end
 vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(-1)]])
 
 local function hook(n)
@@ -242,8 +257,6 @@ vim.keymap.set('n', 'fs', function() hook_term() end)
 vim.keymap.set('n', 'fa', function() copy_filename() end)
 vim.keymap.set('n', 'fd', function() hook_file() end)
 vim.keymap.set('n', 'fn', function() pfname() end, {})
-
-vim.cmd([[autocmd BufRead hooks setlocal nu]])
 
 -- commands
 vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
