@@ -29,7 +29,11 @@ local function rehook()
 	vim.cmd("set autochdir")
 	local path = get_buffer_path()
 	hooks = path..'/hooks'
-	if not file_exists(hooks) then print("hooks doesn't exist") end
+	if not file_exists(hooks) then 
+		print("hooks doesn't exist") 
+	else
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(-1)]])
+	end
 end
 
 kill_flag = false
@@ -69,9 +73,7 @@ local function format_path(str)
 end
 
 local function hook_file()
-	--print(hooks)
 	vim.cmd("on")
-	--print(hooks)
 	vim.cmd("e "..hooks)
 	bufname[vim.api.nvim_get_current_buf()] = hooks
 end
@@ -120,7 +122,6 @@ end
 
 local function hook_mode2(n, args)
 	current_buffer = path.." "..args
-	--print(path.." "..args)
 	if vim.fn.isdirectory(path) ~= 0 then
 		if buffers[current_buffer] == nil then
 			set_dir_mode2(path, args)
@@ -141,7 +142,6 @@ end
 
 local function hook_mode1(n)
 	current_buffer = path
-	--print(path)
 	if vim.fn.isdirectory(path) ~= 0 then 
 		if buffers[path] == nil then
 			set_dir_mode1(path)
@@ -171,7 +171,9 @@ vim.cmd([[
 		let signs = ['j', 'k', 'l', ';', 'm', ',', '.', '/', '!!', '!!', '!!', '!!', '!!']
 		let i = 1
 		let current_buffer = bufnr('%')
-		let signs[a:n] = signs[a:n].'*'
+		if a:n != -1
+			let signs[a:n] = signs[a:n].'*'
+		endif
       
 		for sign in signs
 			execute 'sign define sign' . i . ' text=' . sign . ' texthl=Search'
@@ -202,6 +204,7 @@ local function signs(n)
 		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(7)]])
 	end
 end
+vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(-1)]])
 
 local function hook(n)
 	vim.cmd("silent on")
