@@ -69,10 +69,11 @@ local function format_path(str)
 end
 
 local function hook_file()
-	current_buffer = path.."/hooks"
+	--print(hooks)
 	vim.cmd("on")
-	print(hooks)
+	--print(hooks)
 	vim.cmd("e "..hooks)
+	bufname[vim.api.nvim_get_current_buf()] = hooks
 end
 
 local function hook_term()
@@ -84,19 +85,42 @@ local function hook_term()
 	vim.cmd("te")
 end
 
+bufname = {}
 local function set_dir_mode2(path, args)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path.." "..args] = vim.api.nvim_get_current_buf()
+	bufname[vim.api.nvim_get_current_buf()] = path.." "..args
 end
 
 local function set_dir_mode1(path)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path] = vim.api.nvim_get_current_buf()
+	bufname[vim.api.nvim_get_current_buf()] = path
+end
+
+local function conversion(n)
+	if n == 1 then
+		return 'j'
+	elseif n == 2 then
+		return 'k'
+	elseif n == 3 then
+		return 'l'
+	elseif n == 4 then
+		return ';'
+	elseif n == 5 then
+		return 'm'
+	elseif n == 6 then
+		return ','
+	elseif n == 7 then
+		return '.'
+	elseif n == 8 then
+		return '/'
+	end
 end
 
 local function hook_mode2(n, args)
 	current_buffer = path.." "..args
-	print(path.." "..args)
+	--print(path.." "..args)
 	if vim.fn.isdirectory(path) ~= 0 then
 		if buffers[current_buffer] == nil then
 			set_dir_mode2(path, args)
@@ -117,7 +141,7 @@ end
 
 local function hook_mode1(n)
 	current_buffer = path
-	print(path)
+	--print(path)
 	if vim.fn.isdirectory(path) ~= 0 then 
 		if buffers[path] == nil then
 			set_dir_mode1(path)
@@ -133,11 +157,49 @@ local function hook_mode1(n)
 		if buffers[path] == nil then
 			vim.cmd("e "..path)
 			buffers[path] = vim.api.nvim_get_current_buf()
+			bufname[vim.api.nvim_get_current_buf()] = path
 		else
 			vim.api.nvim_set_current_buf(buffers[path])
 		end
 	else
 		print("MALFORMED hooks:"..n)
+	end
+end
+
+vim.cmd([[
+	function! PlaceSigns(n)
+		let signs = ['j', 'k', 'l', ';', 'm', ',', '.', '/', '!!', '!!', '!!', '!!', '!!']
+		let i = 1
+		let current_buffer = bufnr('%')
+		let signs[a:n] = signs[a:n].'*'
+      
+		for sign in signs
+			execute 'sign define sign' . i . ' text=' . sign . ' texthl=Search'
+			execute 'sign place ' . i . ' line=' . i . ' name=sign' . i . ' buffer=' . 
+			\current_buffer
+			let i += 1
+		endfor
+	endfunction
+]])
+
+
+local function signs(n)
+	if n == 1 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(0)]])
+	elseif n == 2 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(1)]])
+	elseif n == 3 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(2)]])
+	elseif n == 4 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(3)]])
+	elseif n == 5 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(4)]])
+	elseif n == 6 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(5)]])
+	elseif n == 7 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(6)]])
+	elseif n == 8 then
+		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(7)]])
 	end
 end
 
@@ -162,12 +224,26 @@ local function hook(n)
 		return
 	end
 	if args == nil then hook_mode1(n) else hook_mode2(n, args) end
+	signs(n)
 end
 
 local function copy_filename()
-	local file = format_path(current_buffer)
-	print("COPIED TO CLIPBOARD: "..file)
+	local file = format_path(bufname[vim.api.nvim_get_current_buf()])
+	if file ~= nil then
+		print("COPIED TO CLIPBOARD: "..file)
+	else
+		file = vim.api.nvim_buf_get_name(0)
+		print("COPIED TO CLIPBOARD: "..file)
+	end
 	vim.api.nvim_call_function('setreg', {'+', file})
+end
+
+local function pfname()
+	local file = bufname[vim.api.nvim_get_current_buf()]
+	if file == nil then
+		file = vim.api.nvim_buf_get_name(0)
+	end
+	print(file)
 end
 
 -- key bindings
@@ -182,7 +258,9 @@ vim.keymap.set('n', 'f/', function() hook(8) end)
 vim.keymap.set('n', 'fs', function() hook_term() end)
 vim.keymap.set('n', 'fa', function() copy_filename() end)
 vim.keymap.set('n', 'fd', function() hook_file() end)
-vim.keymap.set('n', 'fn', function() print(current_buffer) end, {})
+vim.keymap.set('n', 'fn', function() pfname() end, {})
+
+vim.cmd([[autocmd BufRead hooks setlocal nu]])
 
 -- commands
 vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
