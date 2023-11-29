@@ -100,26 +100,6 @@ local function set_dir_mode1(path)
 	bufname[vim.api.nvim_get_current_buf()] = path
 end
 
-local function conversion(n)
-	if n == 1 then
-		return 'j'
-	elseif n == 2 then
-		return 'k'
-	elseif n == 3 then
-		return 'l'
-	elseif n == 4 then
-		return ';'
-	elseif n == 5 then
-		return 'm'
-	elseif n == 6 then
-		return ','
-	elseif n == 7 then
-		return '.'
-	elseif n == 8 then
-		return '/'
-	end
-end
-
 local function hook_mode2(n, args)
 	current_buffer = path.." "..args
 	if vim.fn.isdirectory(path) ~= 0 then
