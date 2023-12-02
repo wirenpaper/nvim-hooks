@@ -24,15 +24,34 @@ current_buffer = buffer_path
 local buffers = {}
 ----------------------------------------------------
 
+local function is_modified()
+	local modified_buffers = {}
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.bo[buf].modified then
+			table.insert(modified_buffers, buf)
+		end
+	end
+
+	if #modified_buffers > 0 then
+		return true
+	else
+		return false
+	end
+end
+
 -- funcs continued
 local function rehook()
-	vim.cmd("set autochdir")
-	local path = get_buffer_path()
-	hooks = path..'/hooks'
-	if not file_exists(hooks) then 
-		print("hooks doesn't exist") 
+	if is_modified() == false then
+		vim.cmd("set autochdir")
+		local path = get_buffer_path()
+		hooks = path..'/hooks'
+		if not file_exists(hooks) then 
+			print("hooks doesn't exist") 
+		else
+			vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
+		end
 	else
-		vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call PlaceSigns(-1,-1)]])
+		print("save modified buffers")
 	end
 end
 
@@ -190,7 +209,7 @@ local function hook_mode1(n)
 		end
 	elseif file_exists(path) then
 		if path == hooks then
-			print("cannot reference myself")
+			print("cannot reference current hookfile")
 			ERROR_LINE = n
 			return
 		end
@@ -258,6 +277,7 @@ local function pfname()
 	print(file)
 end
 
+
 -- key bindings
 vim.keymap.set('n', 'fj', function() hook(1) end)
 vim.keymap.set('n', 'fk', function() hook(2) end)
@@ -274,4 +294,4 @@ vim.keymap.set('n', 'fn', function() pfname() end, {})
 
 -- commands
 vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
-vim.api.nvim_create_user_command("Lsf", function() vim.cmd([[filter !/\s/ ls]]) end, {})
+vim.api.nvim_create_user_command("Lsa", function() vim.cmd([[ls +]]) end, {})
