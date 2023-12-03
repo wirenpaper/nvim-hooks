@@ -40,19 +40,27 @@ local function is_modified()
 end
 
 -- funcs continued
+local function rehook_helper()
+	vim.cmd("set autochdir")
+	local path = get_buffer_path()
+	hooks = path..'/hooks'
+	if not file_exists(hooks) then 
+		print("hooks doesn't exist") 
+	else
+		vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
+	end
+end
+
 local function rehook()
 	if is_modified() == false then
-		vim.cmd("set autochdir")
-		local path = get_buffer_path()
-		hooks = path..'/hooks'
-		if not file_exists(hooks) then 
-			print("hooks doesn't exist") 
-		else
-			vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
-		end
+		rehook_helper()
 	else
 		print("save modified buffers")
 	end
+end
+
+local function rehook_force()
+	rehook_helper()
 end
 
 ERROR_LINE = 0
@@ -277,7 +285,6 @@ local function pfname()
 	print(file)
 end
 
-
 -- key bindings
 vim.keymap.set('n', 'fj', function() hook(1) end)
 vim.keymap.set('n', 'fk', function() hook(2) end)
@@ -294,4 +301,5 @@ vim.keymap.set('n', 'fn', function() pfname() end, {})
 
 -- commands
 vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
+vim.api.nvim_create_user_command("ReHookForce", function() rehook_force() end, {})
 vim.api.nvim_create_user_command("Lsa", function() vim.cmd([[ls +]]) end, {})

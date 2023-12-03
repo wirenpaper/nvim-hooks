@@ -5,7 +5,6 @@ function M.place_signs()
     local signs = {'j', 'k', 'l', ';', 'm', ',', '.', '/', '!!', '!!', '!!', '!!', '!!'}
     --signs[2] = signs[2] .. my_argument
     for i, sign in ipairs(signs) do
-
         vim.fn.sign_define('sign' .. i, {text = sign, texthl = 'Search'})
         vim.fn.sign_place(i, {line = i, name = 'sign' .. i, buffer = 0})
     end
