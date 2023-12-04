@@ -1,3 +1,16 @@
+term_dict = {}
+local function fname()
+	local file = bufname[vim.api.nvim_get_current_buf()]
+	if file == nil then
+		file = vim.api.nvim_buf_get_name(0)
+	end
+	return file
+end
+
+local function pfname()
+	print(fname())
+end
+
 function file_exists(path)
 	if path ~= nil then
 		local f=io.open(path,"r")
@@ -172,18 +185,22 @@ local function set_dir_mode2(path, args)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path.." "..args] = vim.api.nvim_get_current_buf()
 	bufname[vim.api.nvim_get_current_buf()] = path.." "..args
+	term_dict[fname()] = path
+	vim.api.nvim_set_current_dir(path)
 end
 
 local function set_dir_mode1(path)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path] = vim.api.nvim_get_current_buf()
 	bufname[vim.api.nvim_get_current_buf()] = path
+	term_dict[fname()] = path
+	vim.api.nvim_set_current_dir(path)
 end
 
 local function hook_mode2(n, args)
 	current_buffer = path.." "..args
 	if vim.fn.isdirectory(path) ~= 0 then
-		if buffers[current_buffer] == nil then
+		if buffers[current_buffer] == nil then --HERE
 			set_dir_mode2(path, args)
 		else
 			local buf_loaded = vim.api.nvim_buf_is_loaded(buffers[path.." "..args])
@@ -205,7 +222,7 @@ end
 local function hook_mode1(n)
 	current_buffer = path
 	if vim.fn.isdirectory(path) ~= 0 then 
-		if buffers[path] == nil then
+		if buffers[path] == nil then -- HERE
 			set_dir_mode1(path)
 		else
 			local buf_loaded = vim.api.nvim_buf_is_loaded(buffers[path])
@@ -277,13 +294,18 @@ local function copy_filename()
 	vim.api.nvim_call_function('setreg', {'+', file})
 end
 
-local function pfname()
-	local file = bufname[vim.api.nvim_get_current_buf()]
-	if file == nil then
-		file = vim.api.nvim_buf_get_name(0)
-	end
-	print(file)
+function term_buffer_directory_onchange()
+	term_dict[fname()] = vim.fn.getcwd()
 end
+
+local function on_term_buffer_enter()
+	if term_dict[fname()] ~= nil then
+		local path, _ = format_path(term_dict[fname()])
+		vim.api.nvim_set_current_dir(path)
+	end
+end
+
+vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_term_buffer_enter})
 
 -- key bindings
 vim.keymap.set('n', 'fj', function() hook(1) end)
@@ -302,4 +324,4 @@ vim.keymap.set('n', 'fn', function() pfname() end, {})
 -- commands
 vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
 vim.api.nvim_create_user_command("ReHookForce", function() rehook_force() end, {})
-vim.api.nvim_create_user_command("Lsa", function() vim.cmd([[ls +]]) end, {})
+vim.api.nvim_create_user_command("TBdc", function() term_buffer_directory_onchange() end, {})
