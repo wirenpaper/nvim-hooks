@@ -146,6 +146,12 @@ endfunction
 ]])
 
 local function signs(n,m)
+	if n == nil then
+		n = 0
+	end
+	if m == nil then
+		m = 0
+	end
 	vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call 
 	\PlaceSigns(]] .. n-1 .. [[, ]] .. m-1 .. [[)]])
 end
