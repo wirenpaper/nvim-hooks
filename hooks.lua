@@ -53,6 +53,7 @@ local function is_modified()
 end
 
 -- funcs continued
+local hooks_fired = false
 local function rehook_helper()
 	vim.cmd("set autochdir")
 	local path = get_buffer_path()
@@ -61,6 +62,7 @@ local function rehook_helper()
 		print("hooks doesn't exist") 
 	else
 		vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
+		hooks_fired = true
 	end
 end
 
@@ -181,11 +183,13 @@ local function hook_term()
 end
 
 bufname = {}
+term_bufnum = {}
 local function set_dir_mode2(path, args)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path.." "..args] = vim.api.nvim_get_current_buf()
 	bufname[vim.api.nvim_get_current_buf()] = path.." "..args
 	term_dict[fname()] = path
+	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
 end
 
@@ -194,6 +198,7 @@ local function set_dir_mode1(path)
 	buffers[path] = vim.api.nvim_get_current_buf()
 	bufname[vim.api.nvim_get_current_buf()] = path
 	term_dict[fname()] = path
+	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
 end
 
@@ -298,14 +303,22 @@ function term_buffer_directory_onchange()
 	term_dict[fname()] = vim.fn.getcwd()
 end
 
-local function on_term_buffer_enter()
+local function on_buffer_enter()
 	if term_dict[fname()] ~= nil then
 		local path, _ = format_path(term_dict[fname()])
 		vim.api.nvim_set_current_dir(path)
 	end
+
+	if hooks_fired == true then
+		for key, value in pairs(term_bufnum) do
+			vim.cmd([[bd! ]]..value)
+		end
+		term_bufnum = {}
+		hooks_fired = false
+	end
 end
 
-vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_term_buffer_enter})
+vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
 
 -- key bindings
 vim.keymap.set('n', 'fj', function() hook(1) end)
