@@ -211,7 +211,7 @@ end
 local function hook_mode2(n, args)
 	current_buffer = path.." "..args
 	if vim.fn.isdirectory(path) ~= 0 then
-		if buffers[current_buffer] == nil then --HERE
+		if buffers[current_buffer] == nil then
 			set_dir_mode2(path, args)
 		else
 			local buf_loaded = vim.api.nvim_buf_is_loaded(buffers[path.." "..args])
@@ -233,7 +233,7 @@ end
 local function hook_mode1(n)
 	current_buffer = path
 	if vim.fn.isdirectory(path) ~= 0 then 
-		if buffers[path] == nil then -- HERE
+		if buffers[path] == nil then
 			set_dir_mode1(path)
 		else
 			local buf_loaded = vim.api.nvim_buf_is_loaded(buffers[path])
