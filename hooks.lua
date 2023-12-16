@@ -1,4 +1,8 @@
+local M = {}
+
 term_dict = {}
+
+
 local function fname()
 	local file = bufname[vim.api.nvim_get_current_buf()]
 	if file == nil then
@@ -193,7 +197,7 @@ term_bufnum = {}
 local function set_dir_mode2(path, args)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path.." "..args] = vim.api.nvim_get_current_buf()
-	bufname[vim.api.nvim_get_current_buf()] = path.." "..args
+	bufname[vim.api.nvim_get_current_buf()] = "TERM: "..path.." "..args
 	term_dict[fname()] = path
 	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
@@ -202,7 +206,7 @@ end
 local function set_dir_mode1(path)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path] = vim.api.nvim_get_current_buf()
-	bufname[vim.api.nvim_get_current_buf()] = path
+	bufname[vim.api.nvim_get_current_buf()] = "TERM: "..path
 	term_dict[fname()] = path
 	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
@@ -344,3 +348,9 @@ vim.keymap.set('n', 'fn', function() pfname() end, {})
 vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
 vim.api.nvim_create_user_command("ReHookForce", function() rehook_force() end, {})
 vim.api.nvim_create_user_command("TBdc", function() term_buffer_directory_onchange() end, {})
+
+M = {
+	fname = fname
+}
+
+return M
