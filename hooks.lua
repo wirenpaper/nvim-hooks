@@ -20,13 +20,6 @@ local function format_path(str)
 	end
 end
 
-local function fname_aux()
-	local file = bufname[vim.api.nvim_get_current_buf()]
-	if file == nil then
-		file = {vim.api.nvim_buf_get_name(0), "file"}
-	end
-	return file
-end
 
 function remove_slash(s)
 	-- Check if the last character is a "/"
@@ -55,39 +48,6 @@ function get_after_space(str)
 	end
 end
 
-local function fname_cleaned()
-	--local res = get_end_path_name(remove_slash(fname_aux()[1]))
-	if fname_aux()[2] == "file" then
-		return get_end_path_name(remove_slash(fname_aux()[1])).."*"
-	else
-		local first = get_end_path_name(format_path(fname_aux()[1]))
-		local last = get_after_space(fname_aux()[1])
-		if last == "" then
-			return "["..first.."]"
-		else
-			return "["..first.." "..last.."]"
-		end
-	end
-end
-
-local function fname()
-	return fname_aux()[1]
-end
-
-local function pfname_aux()
-	local file = format_path(bufname[vim.api.nvim_get_current_buf()][1])
-	if file ~= nil then
-		print(file)
-	else
-		file = vim.api.nvim_buf_get_name(0)
-		print(file)
-	end
-end
-
-local function pfname()
-	pfname_aux()
-end
-
 function file_exists(path)
 	if path ~= nil then
 		local f=io.open(path,"r")
@@ -106,13 +66,69 @@ local function get_buffer_path()
 	end
 end
 
--- global vars -------------------------------------
-local buffer_path = vim.api.nvim_buf_get_name(0)
 local path = get_buffer_path()
 local hooks = path..'/hooks'
+
+local function fname_aux()
+	local file = bufname[vim.api.nvim_get_current_buf()]
+	if file == nil then
+		if vim.api.nvim_buf_get_name(0) == hooks then
+			file = {vim.api.nvim_buf_get_name(0), "hooks"}
+		else
+			file = {vim.api.nvim_buf_get_name(0), "file"}
+		end
+	end
+	return file
+end
+
+local function fname_cleaned()
+	--local res = get_end_path_name(remove_slash(fname_aux()[1]))
+	if fname_aux()[2] == "file" then
+		return get_end_path_name(remove_slash(fname_aux()[1])).."@"
+	elseif fname_aux()[2] == "hooks" then
+		return get_end_path_name(remove_slash(fname_aux()[1])).."⇁ "
+	else
+		local first = get_end_path_name(format_path(fname_aux()[1]))
+		local last = get_after_space(fname_aux()[1])
+		if last == "" then
+			return "[ "..first.." ]"
+		else
+			return "[ "..first.." ]".." == "..last.." =="
+		end
+	end
+end
+
+local function fname()
+	return fname_aux()[1]
+end
+
+local function pfname_aux()
+	local file = format_path(bufname[vim.api.nvim_get_current_buf()][1])
+	if file ~= nil then
+		return file
+	else
+		file = vim.api.nvim_buf_get_name(0)
+		return file
+	end
+end
+
+
+local function pfname()
+	if fname_aux()[2] == "term" then
+		local str = fname_aux()[1]
+		if string.sub(str, -1) ~= "/" then
+			print(pfname_aux().."/")
+		else
+			print(pfname_aux())
+		end
+	else
+		print(pfname_aux())
+	end
+end
+
+local buffer_path = vim.api.nvim_buf_get_name(0)
 current_buffer = buffer_path
 local buffers = {}
-----------------------------------------------------
 
 local function is_modified()
 	local modified_buffers = {}
@@ -235,7 +251,7 @@ local function hook_file()
 		end
 	end
 	vim.cmd("e "..hooks)
-	bufname[vim.api.nvim_get_current_buf()] = {hooks, "file"}
+	bufname[vim.api.nvim_get_current_buf()] = {hooks, "hooks"}
 	ERROR_LINE = 0
 end
 
