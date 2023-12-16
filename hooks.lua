@@ -1,6 +1,7 @@
 local M = {}
 
 term_dict = {}
+bufname = {}
 
 local function clean_spaces(str)
 	local str = string.gsub(str, " [^%S\n]+", " ")
@@ -29,7 +30,7 @@ end
 
 function remove_slash(s)
 	-- Check if the last character is a "/"
-	if string.sub (s, -1) == "/" then
+	if string.sub(s, -1) == "/" then
 		-- Remove the last character
 		s = string.sub (s, 1, -2)
 	end
@@ -57,7 +58,7 @@ end
 local function fname_cleaned()
 	--local res = get_end_path_name(remove_slash(fname_aux()[1]))
 	if fname_aux()[2] == "file" then
-		return get_end_path_name(remove_slash(fname_aux()[1]))
+		return get_end_path_name(remove_slash(fname_aux()[1])).."*"
 	else
 		local first = get_end_path_name(format_path(fname_aux()[1]))
 		local last = get_after_space(fname_aux()[1])
@@ -73,8 +74,18 @@ local function fname()
 	return fname_aux()[1]
 end
 
+local function pfname_aux()
+	local file = format_path(bufname[vim.api.nvim_get_current_buf()][1])
+	if file ~= nil then
+		print(file)
+	else
+		file = vim.api.nvim_buf_get_name(0)
+		print(file)
+	end
+end
+
 local function pfname()
-	print(fname())
+	pfname_aux()
 end
 
 function file_exists(path)
@@ -237,7 +248,6 @@ local function hook_term()
 	vim.cmd("te")
 end
 
-bufname = {}
 term_bufnum = {}
 local function set_dir_mode2(path, args)
 	vim.cmd("te cd "..path.." && $SHELL")
