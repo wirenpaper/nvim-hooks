@@ -197,7 +197,7 @@ term_bufnum = {}
 local function set_dir_mode2(path, args)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path.." "..args] = vim.api.nvim_get_current_buf()
-	bufname[vim.api.nvim_get_current_buf()] = "TERM: "..path.." "..args
+	bufname[vim.api.nvim_get_current_buf()] = path.." "..args.." *TERM"
 	term_dict[fname()] = path
 	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
@@ -206,7 +206,7 @@ end
 local function set_dir_mode1(path)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path] = vim.api.nvim_get_current_buf()
-	bufname[vim.api.nvim_get_current_buf()] = "TERM: "..path
+	bufname[vim.api.nvim_get_current_buf()] = path.." *TERM"
 	term_dict[fname()] = path
 	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
