@@ -2,13 +2,75 @@ local M = {}
 
 term_dict = {}
 
+local function clean_spaces(str)
+	local str = string.gsub(str, " [^%S\n]+", " ")
+	if str:sub(1, 1) == " " then return str:sub(2) else return str end
+	return str
+end
 
-local function fname()
+local function format_path(str)
+	if str == nil then return nil end
+	str = clean_spaces(str)
+	local i, j = string.find(str, " ")
+	if i then
+		return string.sub(str, 1, i-1), string.sub(str, j+1)
+	else
+		return str
+	end
+end
+
+local function fname_aux()
 	local file = bufname[vim.api.nvim_get_current_buf()]
 	if file == nil then
-		file = vim.api.nvim_buf_get_name(0)
+		file = {vim.api.nvim_buf_get_name(0), "file"}
 	end
 	return file
+end
+
+function remove_slash(s)
+	-- Check if the last character is a "/"
+	if string.sub (s, -1) == "/" then
+		-- Remove the last character
+		s = string.sub (s, 1, -2)
+	end
+	-- Return the modified string
+	return s
+end
+
+function get_end_path_name(s)
+	local t={}
+	for str in string.gmatch(s, "([^/]+)") do
+		t = str
+	end
+	return t
+end
+
+function get_after_space(str)
+	local i = string.find(str, " ") -- find the first space
+	if i then -- if there is a space
+		return string.sub(str, i + 1) -- return the substring after the space
+	else -- if there is no space
+		return "" -- return an empty string
+	end
+end
+
+local function fname_cleaned()
+	--local res = get_end_path_name(remove_slash(fname_aux()[1]))
+	if fname_aux()[2] == "file" then
+		return get_end_path_name(remove_slash(fname_aux()[1]))
+	else
+		local first = get_end_path_name(format_path(fname_aux()[1]))
+		local last = get_after_space(fname_aux()[1])
+		if last == "" then
+			return "["..first.."]"
+		else
+			return "["..first.." "..last.."]"
+		end
+	end
+end
+
+local function fname()
+	return fname_aux()[1]
 end
 
 local function pfname()
@@ -105,23 +167,6 @@ function lines_from(file, n)
 	return lines
 end
 
-local function clean_spaces(str)
-	local str = string.gsub(str, " [^%S\n]+", " ")
-	if str:sub(1, 1) == " " then return str:sub(2) else return str end
-	return str
-end
-
-local function format_path(str)
-	if str == nil then return nil end
-	str = clean_spaces(str)
-	local i, j = string.find(str, " ")
-	if i then
-		return string.sub(str, 1, i-1), string.sub(str, j+1)
-	else
-		return str
-	end
-end
-
 -- #TODO vimscript -> lua
 vim.cmd([[
 function! PlaceSigns(n,m)
@@ -179,7 +224,7 @@ local function hook_file()
 		end
 	end
 	vim.cmd("e "..hooks)
-	bufname[vim.api.nvim_get_current_buf()] = hooks
+	bufname[vim.api.nvim_get_current_buf()] = {hooks, "file"}
 	ERROR_LINE = 0
 end
 
@@ -197,7 +242,7 @@ term_bufnum = {}
 local function set_dir_mode2(path, args)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path.." "..args] = vim.api.nvim_get_current_buf()
-	bufname[vim.api.nvim_get_current_buf()] = path.." "..args.." *TERM"
+	bufname[vim.api.nvim_get_current_buf()] = {path.." "..args, "term"}
 	term_dict[fname()] = path
 	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
@@ -206,7 +251,7 @@ end
 local function set_dir_mode1(path)
 	vim.cmd("te cd "..path.." && $SHELL")
 	buffers[path] = vim.api.nvim_get_current_buf()
-	bufname[vim.api.nvim_get_current_buf()] = path.." *TERM"
+	bufname[vim.api.nvim_get_current_buf()] = {path, "term"}
 	term_dict[fname()] = path
 	term_bufnum[fname()] = vim.api.nvim_get_current_buf()
 	vim.api.nvim_set_current_dir(path)
@@ -257,7 +302,7 @@ local function hook_mode1(n)
 		if buffers[path] == nil then
 			vim.cmd("e "..path)
 			buffers[path] = vim.api.nvim_get_current_buf()
-			bufname[vim.api.nvim_get_current_buf()] = path
+			bufname[vim.api.nvim_get_current_buf()] = {path, "file"}
 		else
 			vim.api.nvim_set_current_buf(buffers[path])
 		end
@@ -299,7 +344,7 @@ local function hook(n)
 end
 
 local function copy_filename()
-	local file = format_path(bufname[vim.api.nvim_get_current_buf()])
+	local file = format_path(bufname[vim.api.nvim_get_current_buf()][1])
 	if file ~= nil then
 		print("COPIED TO CLIPBOARD: "..file)
 	else
@@ -350,7 +395,7 @@ vim.api.nvim_create_user_command("ReHookForce", function() rehook_force() end, {
 vim.api.nvim_create_user_command("TBdc", function() term_buffer_directory_onchange() end, {})
 
 M = {
-	fname = fname
+	fname_cleaned = fname_cleaned 
 }
 
 return M
