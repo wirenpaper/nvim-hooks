@@ -20,7 +20,6 @@ local function format_path(str)
 	end
 end
 
-
 function remove_slash(s)
 	-- Check if the last character is a "/"
 	if string.sub(s, -1) == "/" then
@@ -125,7 +124,6 @@ local function pfname_aux()
 		return file
 	end
 end
-
 
 local function pfname()
 	if fname_aux()[2] == "term" then
@@ -246,7 +244,6 @@ local function signs(n,m)
 	\PlaceSigns(]] .. n-1 .. [[, ]] .. m-1 .. [[)]])
 end
 
-lines_from(hooks,1)
 n_shad = file_line_number[vim.api.nvim_buf_get_name(0)]
 local function hook_file()
 	vim.cmd("silent on")
@@ -361,10 +358,12 @@ local function hook(n)
 		return
 	end
 	local opts = lines_from(hooks, n)
+
 	if kill_flag == true then
 		kill_flag = false
 		return
 	end
+
 	if opts[n] == nil then
 		print("UNSET hooks:"..n)
 		return
@@ -442,8 +441,16 @@ vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
 vim.api.nvim_create_user_command("ReHookForce", function() rehook_force() end, {})
 vim.api.nvim_create_user_command("TBdc", function() term_buffer_directory_onchange() end, {})
 
+function kill_flag_set(bool_val)
+	kill_flag = bool_val
+end
+
 M = {
-	fname_cleaned = fname_cleaned 
+	fname_cleaned = fname_cleaned,
+	hooks = hooks,
+	lines_from = lines_from,
+	signs = signs,
+	kill_flag_set = kill_flag_set
 }
 
 return M
