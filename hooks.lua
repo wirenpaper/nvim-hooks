@@ -352,6 +352,7 @@ end
 vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 
 local function hook(n)
+	ERROR_LINE = 0
 	vim.cmd("silent on")
 	if file_exists(hooks) == false then
 		print("HOOKS NOT FOUND")
