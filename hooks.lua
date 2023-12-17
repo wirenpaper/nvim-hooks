@@ -81,6 +81,17 @@ local function fname_aux()
 	return file
 end
 
+function has_multiple_slashes_in_row(s)
+	local i = 1
+	for c in s:gmatch"." do
+		if i ~= #s and string.sub(s,i,i) == "/" and string.sub(s,i+1,i+1) == "/" then
+			return true
+		end
+		i = i+1
+	end
+	return false
+end
+
 local function fname_cleaned()
 	if fname_aux()[2] == "file" then
 		return get_end_path_name(remove_slash(fname_aux()[1])).."@"
@@ -359,6 +370,14 @@ local function hook(n)
 		return
 	end
 	path, args = format_path(opts[n])
+
+	if has_multiple_slashes_in_row(path) then
+		print("REPEAT SLASHES NOT ALLOWED "..n)
+		ERROR_LINE = n
+		signs(n_shad, ERROR_LINE)
+		return
+	end
+
 	if path == "" then
 		print("UNSET hooks:"..n)
 		return
