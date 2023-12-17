@@ -371,7 +371,7 @@ local function hook(n)
 	path, args = format_path(opts[n])
 
 	if string.sub(path,-1) == "/" then
-		print("path cannot have '/' at end")
+		print("CANNOT END PATH WITH '/'  "..n)
 		ERROR_LINE = n
 		signs(n_shad, ERROR_LINE)
 		return
