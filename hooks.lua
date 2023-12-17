@@ -271,7 +271,6 @@ local function hook_term()
 	hook_file()
 	vim.cmd("sp")
 	vim.cmd("wincmd j")
-	--vim.cmd("te cd "..path.." && $SHELL")
 	vim.cmd("te")
 end
 
@@ -371,6 +370,13 @@ local function hook(n)
 	end
 	path, args = format_path(opts[n])
 
+	if string.sub(path,-1) == "/" then
+		print("path cannot have '/' at end")
+		ERROR_LINE = n
+		signs(n_shad, ERROR_LINE)
+		return
+	end
+
 	if has_multiple_slashes_in_row(path) then
 		print("REPEAT SLASHES NOT ALLOWED "..n)
 		ERROR_LINE = n
@@ -451,6 +457,7 @@ M = {
 	hooks = hooks,
 	lines_from = lines_from,
 	signs = signs,
+	ERROR_LINE = ERROR_LINE,
 	kill_flag_set = kill_flag_set
 }
 
