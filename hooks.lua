@@ -82,13 +82,16 @@ local function fname_aux()
 end
 
 local function fname_cleaned()
-	--local res = get_end_path_name(remove_slash(fname_aux()[1]))
 	if fname_aux()[2] == "file" then
 		return get_end_path_name(remove_slash(fname_aux()[1])).."@"
 	elseif fname_aux()[2] == "hooks" then
 		return get_end_path_name(remove_slash(fname_aux()[1])).."⇁ "
 	else
-		local first = get_end_path_name(format_path(fname_aux()[1]))
+		local path = format_path(fname_aux()[1])
+		local first = get_end_path_name(path)
+		if string.sub(path, -1) == "/" then
+			first = first.."/"
+		end
 		local last = get_after_space(fname_aux()[1])
 		if last == "" then
 			return "[ "..first.." ]"
