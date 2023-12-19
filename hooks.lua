@@ -244,11 +244,12 @@ local function signs(n,m)
 	\PlaceSigns(]] .. n-1 .. [[, ]] .. m-1 .. [[)]])
 end
 
-function is_comment(str)
-	if str ~= nil and #str >= 2 and string.sub(str, 1, 2) == "--" then
-		return true
+function comment_index(str)
+	if str ~= nil and #str > 2 then
+		local startIndex, endIndex = string.find(str, "%-%-")
+		return startIndex
 	else
-		return false
+		return nil
 	end
 end
 
@@ -377,7 +378,14 @@ local function hook(n)
 		return
 	end
 	path, args = format_path(opts[n])
-	if is_comment(args) then args = nil end
+	local idx = comment_index(args)
+	if idx ~= nil then
+		if idx == 1 then
+			args = nil
+		elseif idx > 1 then
+			args = string.sub(args, 1, idx-1)
+		end
+	end
 
 	if string.sub(path,-1) == "/" then
 		print("CANNOT END PATH WITH '/'  "..n)
