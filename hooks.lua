@@ -209,7 +209,7 @@ end
 -- #TODO vimscript -> lua
 vim.cmd([[
 function! PlaceSigns(n,m)
-	let signs = ['j', 'k', 'l', ';', 'm', ',', '.', '/', '!!', '!!', '!!', '!!', '!!']
+	let signs = ['j', 'k', 'l', ';', 'm', ',', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 	let current_buffer = bufnr('%')
 
 	if a:n != -1 && a:n == a:m
