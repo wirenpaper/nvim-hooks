@@ -244,6 +244,14 @@ local function signs(n,m)
 	\PlaceSigns(]] .. n-1 .. [[, ]] .. m-1 .. [[)]])
 end
 
+function is_comment(str)
+	if str ~= nil and #str >= 2 and string.sub(str, 1, 2) == "--" then
+		return true
+	else
+		return false
+	end
+end
+
 n_shad = file_line_number[vim.api.nvim_buf_get_name(0)]
 local function hook_file()
 	vim.cmd("silent on")
@@ -369,6 +377,7 @@ local function hook(n)
 		return
 	end
 	path, args = format_path(opts[n])
+	if is_comment(args) then args = nil end
 
 	if string.sub(path,-1) == "/" then
 		print("CANNOT END PATH WITH '/'  "..n)
