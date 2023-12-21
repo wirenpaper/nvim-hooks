@@ -3,6 +3,13 @@ local M = {}
 term_dict = {}
 bufname = {}
 
+function file_exists(path)
+	if path ~= nil then
+		local f=io.open(path,"r")
+		if f~=nil then io.close(f) return true else return false end
+	end
+end
+
 local function clean_spaces(str)
 	local str = string.gsub(str, " [^%S\n]+", " ")
 	if str:sub(1, 1) == " " then return str:sub(2) else return str end
@@ -44,13 +51,6 @@ function get_after_space(str)
 		return string.sub(str, i + 1) -- return the substring after the space
 	else -- if there is no space
 		return "" -- return an empty string
-	end
-end
-
-function file_exists(path)
-	if path ~= nil then
-		local f=io.open(path,"r")
-		if f~=nil then io.close(f) return true else return false end
 	end
 end
 
@@ -121,7 +121,16 @@ local function fname()
 end
 
 local function pfname_aux()
-	local file = format_path(bufname[vim.api.nvim_get_current_buf()][1])
+	file = nil
+	local mbufname = bufname[vim.api.nvim_get_current_buf()]
+	if mbufname ~= nil then
+		local name = mbufname[1]
+		if name ~= nil then
+			file = format_path(name)
+		else
+			file = nil
+		end
+	end
 	if file ~= nil then
 		return file
 	else
@@ -191,22 +200,45 @@ end
 ERROR_LINE = 0
 kill_flag = false
 file_line_number = {}
+
+function is_file(path)
+    local stat = vim.loop.fs_stat(path)
+    return stat and stat.type == 'file'
+end
+
 function lines_from(file, n)
 	dups = {}
 	file_line_number = {}
 	if not file_exists(file) then return {} end
 	local lines = {}
 	for line in io.lines(file) do
-		if dups[line] ~= nil and dups[line] ~= ""  then
-			print("DUPLICATE hooks:"..#lines+1)
-			ERROR_LINE = #lines+1
-			kill_flag = true
-			return
-		else
-			dups[line] = line
+		local tmp_line = ""
+		if is_file(format_path(line)) then
+			tmp_line = format_path(line)
 		end
-		lines[#lines + 1] = line
-		file_line_number[line] = #lines
+		if tmp_line == "" then
+			if dups[line] ~= nil and dups[line] ~= ""  then
+				print("DUPLICATE hooks:"..#lines+1)
+				ERROR_LINE = #lines+1
+				kill_flag = true
+				return
+			else
+				dups[line] = line 
+			end
+			lines[#lines + 1] = line
+			file_line_number[line] = #lines
+		else
+			if dups[tmp_line] ~= nil and dups[tmp_line] ~= ""  then
+				print("DUPLICATE hooks:"..#lines+1)
+				ERROR_LINE = #lines+1
+				kill_flag = true
+				return
+			else
+				dups[tmp_line] = tmp_line 
+			end
+			lines[#lines + 1] = tmp_line
+			file_line_number[tmp_line] = #lines
+		end
 	end
 	return lines
 end
@@ -247,15 +279,6 @@ local function signs(n,m)
 	end
 	vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call 
 	\PlaceSigns(]] .. n-1 .. [[, ]] .. m-1 .. [[)]])
-end
-
-function comment_index(str)
-	if str ~= nil and #str > 2 then
-		local startIndex, endIndex = string.find(str, "%/%/")
-		return startIndex
-	else
-		return nil
-	end
 end
 
 n_shad = file_line_number[vim.api.nvim_buf_get_name(0)]
@@ -391,14 +414,6 @@ local function hook(n)
 	end
 
 	path, args = format_path(opts[n])
-	local idx = comment_index(args)
-	if idx ~= nil then
-		if idx == 1 then
-			args = nil
-		elseif idx > 1 then
-			args = string.sub(args, 1, idx-1)
-		end
-	end
 
 	if string.sub(path,-1) == "/" then
 		print("CANNOT END PATH WITH '/'  "..n)
@@ -428,7 +443,16 @@ local function hook(n)
 end
 
 local function copy_filename()
-	local file = format_path(bufname[vim.api.nvim_get_current_buf()][1])
+	file = nil
+	local mbufname = bufname[vim.api.nvim_get_current_buf()]
+	if mbufname ~= nil then
+		local name = mbufname[1]
+		if name ~= nil then
+			file = format_path(name)
+		else
+			file = nil
+		end
+	end
 	if file ~= nil then
 		print("COPIED TO CLIPBOARD: "..file)
 	else
@@ -490,5 +514,6 @@ M = {
 	ERROR_LINE = ERROR_LINE,
 	kill_flag_set = kill_flag_set
 }
+
 
 return M
