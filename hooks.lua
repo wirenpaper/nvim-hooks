@@ -91,9 +91,14 @@ function has_multiple_slashes_in_row(s)
 	return false
 end
 
+local file_args = ""
 local function fname_cleaned()
 	if fname_aux()[2] == "file" then
-		return get_end_path_name(remove_slash(fname_aux()[1])).."@"
+		if file_args == "" then
+			return get_end_path_name(remove_slash(fname_aux()[1])).."@"
+		else
+			return get_end_path_name(remove_slash(fname_aux()[1])).."@".." == "..file_args.." =="
+		end
 	elseif fname_aux()[2] == "hooks" then
 		return get_end_path_name(remove_slash(fname_aux()[1])).."⇁ "
 	else
@@ -246,7 +251,7 @@ end
 
 function comment_index(str)
 	if str ~= nil and #str > 2 then
-		local startIndex, endIndex = string.find(str, "%-%-")
+		local startIndex, endIndex = string.find(str, "%/%/")
 		return startIndex
 	else
 		return nil
@@ -316,8 +321,14 @@ local function hook_mode2(n, args)
 			end
 		end
 	elseif file_exists(path) then
-		print("FILES CANNOT BE LABELED hooks:"..n)
-		ERROR_LINE = n
+		file_args = args
+		if buffers[path] == nil then
+			vim.cmd("e "..path)
+			buffers[path] = vim.api.nvim_get_current_buf()
+			bufname[vim.api.nvim_get_current_buf()] = {path, "file"}
+		else
+			vim.api.nvim_set_current_buf(buffers[path])
+		end
 	else
 		print("MALFORMED hooks:"..n)
 		ERROR_LINE = n
@@ -325,6 +336,7 @@ local function hook_mode2(n, args)
 end
 
 local function hook_mode1(n)
+	file_args = ""
 	current_buffer = path
 	if vim.fn.isdirectory(path) ~= 0 then 
 		if buffers[path] == nil then
@@ -377,6 +389,7 @@ local function hook(n)
 		print("UNSET hooks:"..n)
 		return
 	end
+
 	path, args = format_path(opts[n])
 	local idx = comment_index(args)
 	if idx ~= nil then
