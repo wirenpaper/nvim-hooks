@@ -225,8 +225,6 @@ function lines_from(file, n)
 			else
 				dups[line] = line 
 			end
-			lines[#lines + 1] = line
-			file_line_number[line] = #lines
 		else
 			if dups[tmp_line] ~= nil and dups[tmp_line] ~= ""  then
 				print("DUPLICATE hooks:"..#lines+1)
@@ -236,9 +234,9 @@ function lines_from(file, n)
 			else
 				dups[tmp_line] = tmp_line 
 			end
-			lines[#lines + 1] = tmp_line
-			file_line_number[tmp_line] = #lines
 		end
+		lines[#lines + 1] = line
+		file_line_number[line] = #lines
 	end
 	return lines
 end
@@ -514,6 +512,5 @@ M = {
 	ERROR_LINE = ERROR_LINE,
 	kill_flag_set = kill_flag_set
 }
-
 
 return M
