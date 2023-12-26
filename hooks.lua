@@ -3,6 +3,26 @@ local M = {}
 term_dict = {}
 bufname = {}
 
+function key_map(n)
+	if n == 1 then
+		return "j"
+	elseif n == 2 then
+		return "k"
+	elseif n == 3 then
+		return "l"
+	elseif n == 4 then
+		return ";"
+	elseif n == 5 then
+		return "m"
+	elseif n == 6 then
+		return ","
+	elseif n == 7 then
+		return "."
+	elseif n == 8 then
+		return "/"
+	end
+end
+
 function file_exists(path)
 	if path ~= nil then
 		local f=io.open(path,"r")
@@ -80,6 +100,17 @@ local function fname_aux()
 	return file
 end
 
+local function fname_aux_set(file)
+	if vim.fn.isdirectory(file) ~= 0 then
+		file = {file, "term"}
+	elseif file == hooks then
+		file = {file, "hooks"}
+	else
+		file = {file, "file"}
+	end
+	return file
+end
+
 function has_multiple_slashes_in_row(s)
 	local i = 1
 	for c in s:gmatch"." do
@@ -91,29 +122,120 @@ function has_multiple_slashes_in_row(s)
 	return false
 end
 
+local function chk_num(name)
+	local num = 1
+
+	if vim.fn.filereadable(hooks) == 0 then
+		return 0
+	end
+	for line in io.lines(hooks) do
+		local path, _ = format_path(line)
+		if path == name then
+			return num
+		end
+		num = num+1
+	end
+	return 0
+end
+
+local function chk_num_v2(name)
+	local num = 1
+	for line in io.lines(hooks) do
+		if name == line then
+			return num
+		end
+		num = num+1
+	end
+	return 0
+end
+
 local file_args = ""
 local function fname_cleaned()
 	if fname_aux()[2] == "file" then
 		if file_args == "" then
-			return get_end_path_name(remove_slash(fname_aux()[1])).."@"
+			return vim.api.nvim_buf_get_name(0)
+
 		else
-			return get_end_path_name(remove_slash(fname_aux()[1])).."@".." == "..file_args.." =="
+			return vim.api.nvim_buf_get_name(0)
 		end
 	elseif fname_aux()[2] == "hooks" then
-		return get_end_path_name(remove_slash(fname_aux()[1])).."⇁ "
+		return vim.api.nvim_buf_get_name(0).."⇁ "
 	else
 		local path = format_path(fname_aux()[1])
+
+
 		local first = get_end_path_name(path)
 		if string.sub(path, -1) == "/" then
 			first = first.."/"
 		end
 		local last = get_after_space(fname_aux()[1])
 		if last == "" then
-			return "[ "..first.." ]"
+			local idx = chk_num(path)
+			local opts = lines_from(hooks)
+			tmux_protocol(idx, opts)
+			return vim.fn.getcwd()
+
 		else
-			return "[ "..first.." ]".." == "..last.." =="
+			local idx = chk_num_v2(path.." "..last)
+			local opts = lines_from(hooks)
+			tmux_protocol(idx, opts)
+			return vim.fn.getcwd()
 		end
 	end
+end
+
+local function fname_set_cleaned(file)
+	local path, args = format_path(file)
+	if fname_aux_set(path)[2] == "file" then
+		if args == nil then
+			return " "..get_end_path_name(path).."@ "
+		else
+			return " "..get_end_path_name(path).."@".." -- "..args.." "
+		end
+	else
+		if args == nil then
+			return " [ "..get_end_path_name(path).." ] "
+		else
+			return " [ "..get_end_path_name(path).." ]".." -- "..args.." "
+		end
+	end
+end
+
+local function is_tmux_running()
+	local tmux_check_command = "tmux list-sessions"
+	local status = os.execute(tmux_check_command)
+
+	if status == 0 then
+		-- tmux is running
+		return true
+	else
+		-- tmux is not running
+		return false
+	end
+end
+
+function tmux_protocol(n, opts)
+	local tmux_string = ""
+	local km = key_map(n)
+	if type(opts) == "table" then
+		for i,v in ipairs(opts) do
+			if v ~= "" and key_map(n) ~= key_map(i) then
+				tmux_string = 
+				tmux_string..
+				"#[bg=yellow]#[fg=colour16]"..key_map(i)..
+				"#[fg=white]#[bg=colour16]"..fname_set_cleaned(v)
+			elseif v ~= "" and key_map(n) == key_map(i) then
+				tmux_string = 
+				tmux_string..
+				"#[bg=hotpink]#[fg=colour16]"..key_map(i)..
+				"#[fg=white]#[bg=colour52]"..fname_set_cleaned(v)
+			end
+		end
+	end
+	local function_name = "update_tmux_status_line"
+	local line_number = 0
+	local command = "python3 /home/saifr/scripts/tmux.py " .. function_name .. " " .. line_number .. " '" .. tmux_string .. "'"
+	os.execute(command)
 end
 
 local function fname()
@@ -177,6 +299,12 @@ local function rehook_helper()
 	vim.cmd("set autochdir")
 	local path = get_buffer_path()
 	hooks = path..'/hooks'
+	--print(hooks)
+
+	local idx = chk_num(fname())
+	local opts = lines_from(hooks)
+	tmux_protocol(idx, opts)
+
 	if not file_exists(hooks) then 
 		print("hooks doesn't exist") 
 	else
@@ -206,11 +334,15 @@ function is_file(path)
     return stat and stat.type == 'file'
 end
 
-function lines_from(file, n)
+function lines_from(file)
 	dups = {}
 	file_line_number = {}
 	if not file_exists(file) then return {} end
 	local lines = {}
+	if vim.fn.filereadable(file) == 0 then
+		print("Error: 'hooks' does not exist or is not a readable file.")
+		return 0
+	end
 	for line in io.lines(file) do
 		local tmp_line = ""
 		if is_file(format_path(line)) then
@@ -393,13 +525,14 @@ end
 vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 
 local function hook(n)
+	if vim.fn.filereadable(hooks) == 0 then print("hooks doesn't exist or isn't readble") return end
 	ERROR_LINE = 0
 	vim.cmd("silent on")
 	if file_exists(hooks) == false then
 		print("HOOKS NOT FOUND")
 		return
 	end
-	local opts = lines_from(hooks, n)
+	local opts = lines_from(hooks)
 
 	if kill_flag == true then
 		kill_flag = false
@@ -465,6 +598,10 @@ function term_buffer_directory_onchange()
 end
 
 local function on_buffer_enter()
+	local idx = chk_num(fname())
+	local opts = lines_from(hooks)
+	tmux_protocol(idx, opts)
+
 	if term_dict[fname()] ~= nil then
 		local path, _ = format_path(term_dict[fname()])
 		vim.api.nvim_set_current_dir(path)
@@ -479,7 +616,9 @@ local function on_buffer_enter()
 	end
 end
 
-vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
+function register_bufenter()
+	vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
+end
 
 -- key bindings
 vim.keymap.set('n', 'fj', function() hook(1) end)
@@ -506,11 +645,14 @@ end
 
 M = {
 	fname_cleaned = fname_cleaned,
+	fname_set_cleaned = fname_set_cleaned,
 	hooks = hooks,
 	lines_from = lines_from,
 	signs = signs,
 	ERROR_LINE = ERROR_LINE,
-	kill_flag_set = kill_flag_set
+	kill_flag_set = kill_flag_set,
+	key_map = key_map,
+	register_bufenter = register_bufenter
 }
 
 return M
