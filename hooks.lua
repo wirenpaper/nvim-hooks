@@ -125,9 +125,7 @@ end
 local function chk_num(name)
 	local num = 1
 
-	if vim.fn.filereadable(hooks) == 0 then
-		return 0
-	end
+	if vim.fn.filereadable(hooks) == 0 then return 0 end
 	for line in io.lines(hooks) do
 		local path, _ = format_path(line)
 		if path == name then
@@ -314,6 +312,7 @@ local function rehook_helper()
 end
 
 local function rehook()
+	if vim.fn.filereadable(hooks) == 0 then print("hooks file doesn't exist or isn't readble") return end
 	if is_modified() == false then
 		rehook_helper()
 	else
@@ -339,10 +338,7 @@ function lines_from(file)
 	file_line_number = {}
 	if not file_exists(file) then return {} end
 	local lines = {}
-	if vim.fn.filereadable(file) == 0 then
-		print("Error: 'hooks' does not exist or is not a readable file.")
-		return 0
-	end
+	if vim.fn.filereadable(file) == 0 then return 0 end
 	for line in io.lines(file) do
 		local tmp_line = ""
 		if is_file(format_path(line)) then
@@ -525,7 +521,7 @@ end
 vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 
 local function hook(n)
-	if vim.fn.filereadable(hooks) == 0 then print("hooks doesn't exist or isn't readble") return end
+	if vim.fn.filereadable(hooks) == 0 then print("hooks file doesn't exist or isn't readble") return end
 	ERROR_LINE = 0
 	vim.cmd("silent on")
 	if file_exists(hooks) == false then
