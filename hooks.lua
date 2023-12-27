@@ -455,6 +455,10 @@ end
 local function hook_mode2(n, args)
 	current_buffer = path.." "..args
 	if vim.fn.isdirectory(path) ~= 0 then
+		if is_modified() then
+			print("TERMINAL BUFFER: SAVE MODIFIED BUFFER(S)")
+			return
+		end
 		if buffers[current_buffer] == nil then
 			set_dir_mode2(path, args)
 		else
@@ -484,6 +488,10 @@ local function hook_mode1(n)
 	file_args = ""
 	current_buffer = path
 	if vim.fn.isdirectory(path) ~= 0 then 
+		if is_modified() then
+			print("TERMINAL BUFFER: SAVE MODIFIED BUFFER(S)")
+			return
+		end
 		if buffers[path] == nil then
 			set_dir_mode1(path)
 		else
