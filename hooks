@@ -1,6 +1,6 @@
-/home/saifr/.config/nvim/plugin/hooks/hooks.lua jump
-/home/saifr/.config/nvim/after/plugin/lualine.lua
-/home/saifr/.local/share/nvim/site/pack/packer/start/lualine.nvim/lua/lualine.lua cp
+/home/saifr/.config/nvim/plugin/hooks/hooks.lua
 /home/saifr/scripts/tmux.py
 /home/saifr/scripts/neovim-autocd.py
+/home/saifr/.config/nvim/after/plugin/lualine.lua
+/home/saifr/.zshrc
 /home/saifr/.config/nvim/plugin/hooks

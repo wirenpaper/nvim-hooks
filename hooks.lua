@@ -297,7 +297,6 @@ local function rehook_helper()
 	vim.cmd("set autochdir")
 	local path = get_buffer_path()
 	hooks = path..'/hooks'
-	--print(hooks)
 
 	local idx = chk_num(fname())
 	local opts = lines_from(hooks)
@@ -312,7 +311,6 @@ local function rehook_helper()
 end
 
 local function rehook()
-	if vim.fn.filereadable(hooks) == 0 then print("hooks file doesn't exist or isn't readble") return end
 	if is_modified() == false then
 		rehook_helper()
 	else
@@ -612,8 +610,18 @@ local function on_buffer_enter()
 	end
 end
 
-function register_bufenter()
+local function on_neovim_exit()
+	local function_name = "update_tmux_status_line"
+	local line_number = 0
+	local command = "python3 /home/saifr/scripts/tmux.py " .. function_name .. " " .. line_number ..
+			" '" .. "#[fg=red]NVIM EXITED" .. "'"
+	os.execute(command)
+end
+
+function register_autocommands()
 	vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
+	vim.api.nvim_create_autocmd('VimLeavePre', {callback = on_neovim_exit})
+	if os.getenv("TMUX") == nil then print("HOOKS: NOT RUNNING TMUX") end
 end
 
 -- key bindings
@@ -630,10 +638,15 @@ vim.keymap.set('n', 'fa', function() copy_filename() end)
 vim.keymap.set('n', 'fd', function() hook_file() end)
 vim.keymap.set('n', 'fn', function() pfname() end, {})
 
+local function tmux_warning()
+	print("tmux is off")
+end
+
 -- commands
 vim.api.nvim_create_user_command("ReHook", function() rehook() end, {})
 vim.api.nvim_create_user_command("ReHookForce", function() rehook_force() end, {})
 vim.api.nvim_create_user_command("TBdc", function() term_buffer_directory_onchange() end, {})
+vim.api.nvim_create_user_command("Warn", function() tmux_warning() end, {})
 
 function kill_flag_set(bool_val)
 	kill_flag = bool_val
@@ -648,7 +661,7 @@ M = {
 	ERROR_LINE = ERROR_LINE,
 	kill_flag_set = kill_flag_set,
 	key_map = key_map,
-	register_bufenter = register_bufenter
+	register_autocommands = register_autocommands
 }
 
 return M
