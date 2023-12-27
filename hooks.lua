@@ -621,7 +621,7 @@ end
 function register_autocommands()
 	vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
 	vim.api.nvim_create_autocmd('VimLeavePre', {callback = on_neovim_exit})
-	if os.getenv("TMUX") == nil then print("HOOKS: NOT RUNNING TMUX") end
+	if os.getenv("TMUX") == nil then print("WARNING: running hooks without tmux") end
 end
 
 -- key bindings
