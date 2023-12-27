@@ -219,14 +219,12 @@ function tmux_protocol(n, opts)
 		for i,v in ipairs(opts) do
 			if v ~= "" and key_map(n) ~= key_map(i) then
 				tmux_string = 
-				tmux_string..
-				"#[bg=yellow]#[fg=colour16]"..key_map(i)..
-				"#[fg=white]#[bg=colour16]"..fname_set_cleaned(v)
+					tmux_string.."#[bg=yellow]#[fg=colour16]"..key_map(i)..
+					"#[fg=white]#[bg=colour16]"..fname_set_cleaned(v)
 			elseif v ~= "" and key_map(n) == key_map(i) then
 				tmux_string = 
-				tmux_string..
-				"#[bg=hotpink]#[fg=colour16]"..key_map(i)..
-				"#[fg=white]#[bg=colour52]"..fname_set_cleaned(v)
+					tmux_string.."#[bg=hotpink]#[fg=colour16]"..key_map(i)..
+					"#[fg=white]#[bg=colour52]"..fname_set_cleaned(v)
 			end
 		end
 	end
@@ -618,9 +616,27 @@ local function on_neovim_exit()
 	os.execute(command)
 end
 
+--local function check_buffer()
+	--local path = get_buffer_path()
+	--hooks = path..'/hooks'
+	--local idx = chk_num(fname())
+	--local opts = lines_from(hooks)
+
+	--local bufnr = vim.api.nvim_get_current_buf()
+	--local is_modified = vim.api.nvim_buf_get_option(bufnr, 'modified')
+	--if is_modified then
+		--print("buffer has unsaved changes")
+		--tmux_protocol(idx, opts)
+	--else
+		--print("buffer is up to date")
+		--tmux_protocol(idx, opts)
+	--end
+--end
+
 function register_autocommands()
 	vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
 	vim.api.nvim_create_autocmd('VimLeavePre', {callback = on_neovim_exit})
+	--vim.api.nvim_create_autocmd("TextChanged", {pattern = "*", callback = check_buffer})
 	if os.getenv("TMUX") == nil then print("WARNING: running hooks without tmux") end
 end
 
