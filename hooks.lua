@@ -622,11 +622,12 @@ local function on_neovim_exit()
 	local command = "python3 /home/saifr/scripts/tmux.py " .. function_name .. " " .. line_number ..
 			" '" .. "#[fg=red]NVIM EXITED" .. "'"
 	os.execute(command)
+	os.exit()
 end
 
 function register_autocommands()
 	vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
-	vim.api.nvim_create_autocmd('VimLeavePre', {callback = on_neovim_exit})
+	vim.api.nvim_create_autocmd('VimLeave', {callback = on_neovim_exit})
 	if os.getenv("TMUX") == nil then print("WARNING: running hooks without tmux") end
 end
 
