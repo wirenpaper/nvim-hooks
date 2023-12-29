@@ -214,6 +214,8 @@ end
 
 local mod_flag = false
 function tmux_protocol(n, opts)
+	if nvim_exit_flag == true then return end
+
 	local tmux_string = ""
 	local km = key_map(n)
 
@@ -634,13 +636,14 @@ local function on_buffer_enter()
 	end
 end
 
+nvim_exit_flag = false
 local function on_neovim_exit()
 	local function_name = "update_tmux_status_line"
 	local line_number = 0
 	local command = "python3 /home/saifr/scripts/tmux.py " .. function_name .. " " .. line_number ..
 			" '" .. "#[fg=red]NVIM EXITED" .. "'"
 	os.execute(command)
-	os.exit()
+	nvim_exit_flag = true
 end
 
 local function on_buf_save()
