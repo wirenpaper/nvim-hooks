@@ -212,19 +212,33 @@ local function is_tmux_running()
 	end
 end
 
+local mod_flag = false
 function tmux_protocol(n, opts)
 	local tmux_string = ""
 	local km = key_map(n)
+
+	local cc1 = "#[bg=yellow]#[fg=black]"
+	local cc2 = "#[fg=white]#[bg=colour16]"
+	local cc3 = "#[bg=hotpink]#[fg=colour16]"
+	local cc4 = "#[fg=white]#[bg=colour52]"
+
+	if mod_flag == true then
+		cc1 = "#[bg=yellow]#[fg=black]"
+		cc2 = "#[fg=colour16]#[bg=white]"
+		cc3 = "#[bg=hotpink]#[fg=colour16]"
+		cc4 = "#[fg=black]#[bg=lightgreen]"
+	end
+
 	if type(opts) == "table" then
 		for i,v in ipairs(opts) do
 			if v ~= "" and key_map(n) ~= key_map(i) then
 				tmux_string = 
-					tmux_string.."#[bg=yellow]#[fg=colour16]"..key_map(i)..
-					"#[fg=white]#[bg=colour16]"..fname_set_cleaned(v)
+					tmux_string..cc1..key_map(i)..
+					cc2..fname_set_cleaned(v)
 			elseif v ~= "" and key_map(n) == key_map(i) then
 				tmux_string = 
-					tmux_string.."#[bg=hotpink]#[fg=colour16]"..key_map(i)..
-					"#[fg=white]#[bg=colour52]"..fname_set_cleaned(v)
+					tmux_string..cc3..key_map(i)..
+					cc4..fname_set_cleaned(v)
 			end
 		end
 	end
@@ -456,8 +470,7 @@ local function hook_mode2(n, args)
 	current_buffer = path.." "..args
 	if vim.fn.isdirectory(path) ~= 0 then
 		if is_modified() then
-			print("TERMINAL BUFFER: SAVE MODIFIED BUFFER(S)")
-			return
+			print("TERMINAL BUFFER: UNSAVED MODIFIED BUFFER(S)")
 		end
 		if buffers[current_buffer] == nil then
 			set_dir_mode2(path, args)
@@ -489,8 +502,7 @@ local function hook_mode1(n)
 	current_buffer = path
 	if vim.fn.isdirectory(path) ~= 0 then 
 		if is_modified() then
-			print("TERMINAL BUFFER: SAVE MODIFIED BUFFER(S)")
-			return
+			print("TERMINAL BUFFER: UNSAVED MODIFIED BUFFER(S)")
 		end
 		if buffers[path] == nil then
 			set_dir_mode1(path)
@@ -598,6 +610,12 @@ function term_buffer_directory_onchange()
 end
 
 local function on_buffer_enter()
+	if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+		if is_modified() then mod_flag = true end
+	else
+		mod_flag = false
+	end
+
 	local idx = chk_num(fname())
 	local opts = lines_from(hooks)
 	tmux_protocol(idx, opts)
@@ -625,9 +643,18 @@ local function on_neovim_exit()
 	os.exit()
 end
 
+local function on_buf_save()
+	if is_modified() == true then
+		mod_flag = true
+	else
+		mod_flag = false
+	end
+end
+
 function register_autocommands()
 	vim.api.nvim_create_autocmd('BufEnter', {pattern = '*', callback = on_buffer_enter})
 	vim.api.nvim_create_autocmd('VimLeave', {callback = on_neovim_exit})
+	vim.api.nvim_create_autocmd('BufWritePost', {callback = on_buf_save})
 	if os.getenv("TMUX") == nil then print("WARNING: running hooks without tmux") end
 end
 
