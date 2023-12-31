@@ -660,7 +660,7 @@ function register_autocommands()
 	vim.api.nvim_create_autocmd('BufWritePost', {callback = on_buf_save})
 
 	if file_exists(hooks) and os.getenv("TMUX") == nil then 
-		print("WARNING: hooks detected; maybe turn tmux on for tab pane?") 
+		print("hooks -- TMUX ISN'T STARTED")
 	end
 end
 
