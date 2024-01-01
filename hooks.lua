@@ -233,6 +233,7 @@ function tmux_protocol(n, opts)
 
 	if type(opts) == "table" then
 		for i,v in ipairs(opts) do
+			if i > 8 then break end
 			if v ~= "" and key_map(n) ~= key_map(i) then
 				tmux_string = 
 					tmux_string..cc1..key_map(i)..
