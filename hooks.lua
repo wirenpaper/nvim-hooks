@@ -2,6 +2,7 @@ local M = {}
 
 term_dict = {}
 bufname = {}
+meta_names = {}
 
 function key_map(n)
 	if n == 1 then
@@ -122,31 +123,6 @@ function has_multiple_slashes_in_row(s)
 	return false
 end
 
-local function chk_num(name)
-	local num = 1
-
-	if vim.fn.filereadable(hooks) == 0 then return 0 end
-	for line in io.lines(hooks) do
-		local path, _ = format_path(line)
-		if path == name then
-			return num
-		end
-		num = num+1
-	end
-	return 0
-end
-
-local function chk_num_v2(name)
-	local num = 1
-	for line in io.lines(hooks) do
-		if name == line then
-			return num
-		end
-		num = num+1
-	end
-	return 0
-end
-
 local file_args = ""
 local function fname_cleaned()
 	if fname_aux()[2] == "file" then
@@ -161,22 +137,19 @@ local function fname_cleaned()
 	else
 		local path = format_path(fname_aux()[1])
 
-
 		local first = get_end_path_name(path)
 		if string.sub(path, -1) == "/" then
 			first = first.."/"
 		end
 		local last = get_after_space(fname_aux()[1])
 		if last == "" then
-			local idx = chk_num(path)
 			local opts = lines_from(hooks)
-			tmux_protocol(idx, opts)
+			tmux_protocol(opts)
 			return vim.fn.getcwd()
 
 		else
-			local idx = chk_num_v2(path.." "..last)
 			local opts = lines_from(hooks)
-			tmux_protocol(idx, opts)
+			tmux_protocol(opts)
 			return vim.fn.getcwd()
 		end
 	end
@@ -212,12 +185,22 @@ local function is_tmux_running()
 	end
 end
 
+local function fname()
+	return fname_aux()[1]
+end
+
 local mod_flag = false
-function tmux_protocol(n, opts)
+function tmux_protocol(opts)
 	if nvim_exit_flag == true then return end
 
 	local tmux_string = ""
 	local km = key_map(n)
+	local n = 0
+	if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+		n = file_line_number[fname()]
+	else
+		n = file_line_number[meta_names[fname()]]
+	end
 
 	local cc1 = "#[bg=yellow]#[fg=black]"
 	local cc2 = "#[fg=white]#[bg=colour16]"
@@ -249,10 +232,6 @@ function tmux_protocol(n, opts)
 	local line_number = 0
 	local command = "python3 /home/saifr/scripts/tmux.py " .. function_name .. " " .. line_number .. " '" .. tmux_string .. "'"
 	os.execute(command)
-end
-
-local function fname()
-	return fname_aux()[1]
 end
 
 local function pfname_aux()
@@ -313,9 +292,10 @@ local function rehook_helper()
 	local path = get_buffer_path()
 	hooks = path..'/hooks'
 
-	local idx = chk_num(fname())
+	--local idx = chk_num(fname())
 	local opts = lines_from(hooks)
-	tmux_protocol(idx, opts)
+	--tmux_protocol(idx, opts)
+	tmux_protocol(opts)
 
 	if not file_exists(hooks) then 
 		print("hooks doesn't exist") 
@@ -339,13 +319,14 @@ end
 
 ERROR_LINE = 0
 kill_flag = false
-file_line_number = {}
 
 function is_file(path)
     local stat = vim.loop.fs_stat(path)
     return stat and stat.type == 'file'
 end
 
+file_line_number = {}
+local dups = {}
 function lines_from(file)
 	dups = {}
 	file_line_number = {}
@@ -374,6 +355,7 @@ function lines_from(file)
 				return
 			else
 				dups[tmp_line] = tmp_line 
+				meta_names[format_path(line)] = line
 			end
 		end
 		lines[#lines + 1] = line
@@ -385,7 +367,7 @@ end
 -- #TODO vimscript -> lua
 vim.cmd([[
 function! PlaceSigns(n,m)
-	let signs = ['j', 'k', 'l', ';', 'm', ',', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+	let signs = ['j', 'k', 'l', ';', 'm', ',', '.', '/']
 	let current_buffer = bufnr('%')
 
 	if a:n != -1 && a:n == a:m
@@ -449,6 +431,70 @@ local function hook_term()
 	vim.cmd("wincmd j")
 	vim.cmd("te")
 end
+
+local function write_hooks(n, tpath)
+	local lines = {}
+	local file = io.open(hooks, "r")
+	for line in file:lines() do
+		table.insert(lines, line)
+	end
+	file:close()
+
+	lines[n] = tpath
+	file = io.open(hooks, "w")
+	for _, line in ipairs(lines) do
+		file:write(line, "\n")
+	end
+	file:close()
+end
+
+local function term_retag(params)
+	local n = file_line_number[current_buffer]
+	local tag = params.args
+	if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+		if tag == "" then
+			if path ~= fname() then
+				if dups[path] ~= nil then
+					print("RETAG DENIED -- DUPLICATE")
+					return
+				end
+				buffers[path] = vim.api.nvim_get_current_buf()
+				bufname[vim.api.nvim_get_current_buf()] = {path, "term"}
+				term_dict[path] = path
+				term_bufnum[path] = vim.api.nvim_get_current_buf()
+				write_hooks(n, path)
+				--local opts = lines_from(hooks)
+				--tmux_protocol(opts)
+			elseif path == fname() then
+				print("RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH")
+			end
+		else
+			if path.." "..tag ~= fname() then
+				if dups[path.." "..tag] ~= nil then
+					print("RETAG DENIED -- DUPLICATE")
+					return
+				end
+				buffers[path.." "..tag] = vim.api.nvim_get_current_buf()
+				bufname[vim.api.nvim_get_current_buf()] = {path.." "..tag, "term"}
+				term_dict[path.." "..tag] = path
+				term_bufnum[path.." "..tag] = vim.api.nvim_get_current_buf()
+				write_hooks(n, path.." "..tag)
+				--local opts = lines_from(hooks)
+				--tmux_protocol(opts)
+			elseif path.." "..tag == fname() then
+				print("RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH")
+			end
+		end
+	else
+		print("ERROR: NOT A TERMINAL BUFFER")
+	end
+end
+vim.api.nvim_create_user_command("TermRetag", function(params) term_retag(params) end, { nargs = "*" })
+
+local function loltag()
+	print(fname())
+end
+vim.api.nvim_create_user_command("Lol", function() loltag() end, {})
 
 term_bufnum = {}
 local function set_dir_mode2(path, args)
@@ -619,9 +665,8 @@ local function on_buffer_enter()
 		mod_flag = false
 	end
 
-	local idx = chk_num(fname())
 	local opts = lines_from(hooks)
-	tmux_protocol(idx, opts)
+	tmux_protocol(opts)
 
 	if term_dict[fname()] ~= nil then
 		local path, _ = format_path(term_dict[fname()])
