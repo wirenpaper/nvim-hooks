@@ -191,10 +191,27 @@ end
 
 local mod_flag = false
 
-local function tmux_protocol_dark()
-end
+cmode = "dark"
+
+vim.api.nvim_create_autocmd({'VimEnter', 'ColorScheme'}, {
+    pattern = '*',
+    callback = function()
+        cmode = "dark"
+        color = vim.g.colors_name
+        if color == "quiet" then
+            cmode = "light"
+        end
+        if color == "darkness" then
+            cmode = "dark"
+        end
+        tmux_protocol(gropts)
+    end,
+})
+
+gropts = ""
 
 function tmux_protocol(opts)
+    gropts = opts
     if nvim_exit_flag == true then return end
 
     local tmux_string = ""
@@ -206,14 +223,28 @@ function tmux_protocol(opts)
         n = file_line_number[meta_names[fname()]]
     end
 
-    local cc1 = "#[fg=colour16]#[bg=darkgray]"
-    local cc2 = "#[fg=lightgray]#[bg=colour16]"
-    --local cc3 = "#[fg=colour16]#[bg=cyan]"
-    local cc3 = "#[fg=colour16]#[bg=white]"
-    local cc4 = "#[fg=colour16]#[bg=dimgray]"
+    local cc1 = ""
+    local cc2 = ""
+    local cc3 = ""
+    local cc4 = ""
+
+    --dark mode
+    if cmode == "dark" then
+        cc1 = "#[fg=colour16]#[bg=darkgray]"
+        cc2 = "#[fg=lightgray]#[bg=colour16]"
+        cc3 = "#[fg=colour16]#[bg=white]"
+        cc4 = "#[fg=colour16]#[bg=dimgray]"
+    end
+
+    --light mode
+    if cmode == "light" then
+        cc1 = "#[fg=colour16]#[bg=darkgray]"
+        cc2 = "#[fg=black]#[bg=white]"
+        cc3 = "#[fg=black]#[bg=orange]"
+        cc4 = "#[fg=black]#[bg=lightcyan]"
+    end
 
     if mod_flag == true then
-        --cc3 = "#[fg=colour16]#[bg=red]"
         cc4 = "#[fg=colour16]#[bg=pink]"
     end
 
