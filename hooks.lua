@@ -244,9 +244,11 @@ function tmux_protocol(opts)
         cc4 = "#[fg=black]#[bg=lightcyan]"
     end
 
-    if mod_flag == true then
-        cc4 = "#[fg=colour16]#[bg=pink]"
-    end
+    --disabling for now
+
+    --if mod_flag == true then
+        --cc4 = "#[fg=colour16]#[bg=pink]"
+    --end
 
     if type(opts) == "table" then
         for i,v in ipairs(opts) do
@@ -544,7 +546,7 @@ else
                     current_buffer = path.." "..args
                     if vim.fn.isdirectory(path) ~= 0 then
                         if is_modified() then
-                            print("TERMINAL BUFFER: UNSAVED MODIFIED BUFFER(S)")
+                            --print("TERMINAL BUFFER: UNSAVED MODIFIED BUFFER(S)")
                         end
                         if buffers[current_buffer] == nil then
                             set_dir_mode2(path, args)
@@ -576,7 +578,7 @@ else
                     current_buffer = path
                     if vim.fn.isdirectory(path) ~= 0 then 
                         if is_modified() then
-                            print("TERMINAL BUFFER: UNSAVED MODIFIED BUFFER(S)")
+                            --print("TERMINAL BUFFER: UNSAVED MODIFIED BUFFER(S)")
                         end
                         if buffers[path] == nil then
                             set_dir_mode1(path)
