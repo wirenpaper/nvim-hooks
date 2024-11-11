@@ -35,7 +35,9 @@ end
 function pop_cmds()
     local cmds = { 
         {Localhost:new("ng serve", 4200)},
-        {Localhost:new("ng serve --port 4209", 4209), 1}
+        {Localhost:new("ng serve --port 4209", 4209), 1},
+        {Localhost:new("ng serve --port 4203", 4203), 1},
+        {Localhost:new("ng serve --port 4204", 4204), 2}
     }
     for _, el in ipairs(cmds) do
         if el[2] then
@@ -44,21 +46,20 @@ function pop_cmds()
     end
     run_tasks(cmds)
 end
-
-vim.api.nvim_create_user_command('PopCmds', pop_cmds, {})
+vim.api.nvim_create_user_command('RunTasks', pop_cmds, {})
 
 function run_tasks(cmds)
     vim.schedule(function()
         for _, cmd in ipairs(cmds) do
             if not cmd[2] then  -- No dependency
-                run_localhost(cmd[1])
+                Localhost:run(cmd[1])
             else
                 -- Start a single async watcher for this command
                 local function watch_dependency()
                     local job_id = vim.fn.jobstart({'sleep', '0.5'}, {
                         on_exit = function()
                             if cmd[2][1].is_active then
-                                run_localhost(cmd[1])
+                                Localhost:run(cmd[1])
                             else
                                 watch_dependency()  -- Check again in 500ms
                             end
@@ -72,8 +73,7 @@ function run_tasks(cmds)
 end
 
 local task_path = hooks.path .. '/.hook_files/tasks/'
-
-function run_localhost(cmd)
+function Localhost:run(cmd)
     if cmd.job_id > 0 then
         return  -- Prevent multiple starts
     end
@@ -117,7 +117,6 @@ function run_localhost(cmd)
     end
 end
 
-vim.api.nvim_create_user_command('RunTasks', run_tasks, {})
 -- kill -9 $(lsof -t -i:4200)
 
 function AttachToLocalServer()
