@@ -17,7 +17,7 @@ local previewers = require('telescope.previewers')
 local function workspace_dir_isempty()
     path = hooks.path .. "/.hook_files/"
     local files = vim.fn.readdir(path, function(name)
-        return name ~= '__f__'  -- This keeps all files except '__f__'
+        return name ~= '__f__' -- This keeps all files except '__f__'
     end)
 
     -- Then check if the resulting list has any files

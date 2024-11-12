@@ -32,12 +32,13 @@ function Localhost:new(instruction, port)
     return instance
 end
 
+cmds = nil
 function pop_cmds()
-    local cmds = { 
+    cmds = { 
         {Localhost:new("ng serve", 4200)},
         {Localhost:new("ng serve --port 4209", 4209), 1},
-        {Localhost:new("ng serve --port 4203", 4203), 1},
-        {Localhost:new("ng serve --port 4204", 4204), 2}
+        --{Localhost:new("ng serve --port 4203", 4203), 1},
+        --{Localhost:new("ng serve --port 4204", 4204), 2}
     }
     for _, el in ipairs(cmds) do
         if el[2] then
@@ -109,7 +110,6 @@ function Localhost:run(cmd)
                 end
             })
         end
-        
         watch_port()
     else
         vim.cmd("redraw")
