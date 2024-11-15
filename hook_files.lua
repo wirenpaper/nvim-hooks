@@ -1,10 +1,13 @@
 package.path = package.path .. ";/home/saifr/.config/nvim/plugin/hooks/?.lua"
 local hooks = require'hooks'
-local lualine = require('lualine')
+local lualine = require'lualine'
+local utils = require'utilities'
 
 local M = {}
 
 M.MARKER = "__f__"
+path = hooks.path .. '/.hook_files/'
+marker_path = path .. M.MARKER
 
 -- Telescope requirements
 local pickers = require('telescope.pickers')
@@ -28,17 +31,6 @@ local function workspace_dir_isempty()
     end
 end
 
-local function file_content(source_path)
-    local source_file = io.open(source_path, "r")
-    if not source_file then
-        print("Error: Could not open " .. source_path .. " for reading.")
-        return
-    end
-    local content = source_file:read("*all")
-    source_file:close()
-    return content
-end
-
 local function file_write(content, target_path)
     local target_file = io.open(target_path, "w")
     if not target_file then
@@ -51,7 +43,7 @@ local function file_write(content, target_path)
 end
 
 local function file_copy(source_path, target_path)
-    local content = file_content(source_path)
+    local content = utils.file_content(source_path)
     file_write(content, target_path)
 end
 
@@ -81,27 +73,16 @@ end
 
 function M.hook_files(arg, flt)
     local hook_files = vim.fn.readdir(hooks.path .. '/.hook_files/', function(name)
-        return name ~= M.MARKER and name ~= flt --and name ~= "roles" and name ~= "designation"
+        local function default_conditions()
+            return name ~= M.MARKER and name ~= flt and name ~= "tasks"
+        end
+        if arg == "DELETE" then 
+            return default_conditions() and name ~= utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
+        end
+        return default_conditions()
     end)
 
     if #hook_files == 0 then
-        if arg == "NEW" then
-            vim.ui.input({
-                prompt = "File name: "
-            }, function(input)
-                if input then
-                    vim.cmd("redraw")
-                    local marker_path = hooks.path .. '/.hook_files/' .. M.MARKER
-                    hookfiles_new(input)
-                    file_write(input, marker_path)
-                    hookfiles(input)
-                else
-                    print("Action cancelled")
-                end
-            end)
-            return
-        end
-
         if arg == "SWITCH" then
             vim.cmd("redraw")
             print("No files listed")
@@ -112,7 +93,7 @@ function M.hook_files(arg, flt)
             print("No files listed")
         end
 
-        if striing.sub(arg, 1, #"COPY ") == "COPY " then
+        if string.sub(arg, 1, #"COPY ") == "COPY " then
             vim.ui.input({
                 prompt = "Copy to: "
             }, function(input)
@@ -190,7 +171,11 @@ function M.hook_files(arg, flt)
                             print("No such Workspace")
                         end
                     elseif arg == "DELETE" then
-                        hookfiles_del(entry.value)
+                        if entry and entry.value then
+                            hookfiles_del(entry.value)
+                        else
+                            print("Select from list only")
+                        end
                     elseif arg == "RENAME" then
                         if entry and entry.value then
                             hookfiles_ren(entry.value, entry.value)
@@ -208,6 +193,7 @@ function M.hook_files(arg, flt)
                         if entry and entry.value then
                             hookfiles_ren_ex(path, hooks.path .. "/.hook_files/" .. entry.value)
                         else
+                            -- THE POOMING
                             hookfiles_ren_ex(path, hooks.path .. "/.hook_files/" .. action_state.get_current_line())
                         end
                     elseif string.sub(arg, 1, 5) == "COPY " then
@@ -216,16 +202,6 @@ function M.hook_files(arg, flt)
                             hookfiles_cp_ex(path, hooks.path .. "/.hook_files/" .. entry.value)
                         else
                             hookfiles_cp_ex(path, hooks.path .. "/.hook_files/" .. action_state.get_current_line())
-                        end
-                    elseif arg == "NEW" then
-                        if entry and entry.value then
-                            vim.api.nvim_command('w ' .. hooks.path .. "/hooks")
-                            hookfiles_new(entry.value)
-                            hookfiles(file_content(hooks.path .. "/.hook_files/" .. M.MARKER)) 
-                        else
-                            vim.api.nvim_command('w ' .. hooks.path .. "/hooks")
-                            hookfiles_new(action_state.get_current_line())
-                            hookfiles(file_content(hooks.path .. "/.hook_files/" .. M.MARKER)) 
                         end
                     end
                 end)
@@ -241,19 +217,13 @@ vim.api.nvim_create_user_command('Ws', function()
         print("No workspaces found")
         return
     end
-    M.hook_files("SWITCH", file_content(hooks.path .. "/.hook_files/" .. M.MARKER)) 
+    M.hook_files("SWITCH", utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER)) 
 end, {})
 
 function hookfiles(fname)
-    local target_path = hooks.path .. '/hooks'
-    local source_path = hooks.path .. '/.hook_files/' .. fname
-    file_copy(source_path, target_path)
-
-    local marker_path = hooks.path .. '/.hook_files/' .. M.MARKER
     bookmark(fname, marker_path)
-
     set_hookfiles(fname)
-    hooks.on_buffer_enter()
+    hooks.rehook(hooks.path .. '/.hook_files/' .. fname)
 end
 
 vim.api.nvim_create_user_command('Wy', function()
@@ -266,11 +236,11 @@ vim.api.nvim_create_user_command('Wy', function()
     vim.ui.input({
         prompt = "Current workspace? (y/n): "
     }, function(input)
-        flt = file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
+        flt = utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
         if input == "n" then
             M.hook_files("COPY", flt) 
         elseif input == "y" then
-            local path = file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
+            local path = utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
             if path and path ~= "" then
                 hookfiles_cp(path, flt)
             else
@@ -287,68 +257,9 @@ function hookfiles_cp(fname, flt)
     M.hook_files("COPY " .. source_path:match("([^/]+)$"), flt)
 end
 
--- Reload
-vim.api.nvim_create_user_command('Wr', function() 
-    vim.api.nvim_command('w ' .. hooks.path .. "/hooks")
-    hookfiles(file_content(hooks.path .. "/.hook_files/" .. M.MARKER)) 
-end, {})
-
-vim.api.nvim_create_user_command('Wx', function()
-    vim.api.nvim_command('w ' .. hooks.path .. "/hooks")
-    local fname = file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
-    local path = hooks.path .. "/.hook_files/" .. fname
-    file_copy(hooks.path .. "/hooks", path)
-end, {})
-
-vim.api.nvim_create_user_command('Wn', function()
-    if vim.fn.isdirectory(hooks.path .. "/.hook_files") == 0 then
-        vim.fn.mkdir(hooks.path .. "/.hook_files", "p")
-    end
-
-    local f_file = hooks.path .. "/.hook_files/__f__"
-    if vim.fn.filereadable(f_file) == 0 then
-        vim.fn.writefile({}, f_file)
-    end
-
-    --flt = file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
-    M.hook_files("NEW", flt)
-end, {})
-
-function hookfiles_new(target)
-    hookfiles_cp_ex(hooks.path .. "/hooks", hooks.path .. "/.hook_files/" .. target)
-end
-
-vim.api.nvim_create_user_command('Wm', function() 
-    if workspace_dir_isempty() then
-        print("There are no workspaces")
-        return
-    end
-
-    vim.ui.input({
-        prompt = "Current workspace? (y/n): "
-    }, function(input)
-        flt = file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
-        if input == "n" then
-            M.hook_files("RENAME", flt) 
-        elseif input == "y" then
-            local path = file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
-            if path and path ~= "" then
-                hookfiles_ren(path, flt)
-            else
-                print("Workspace doesnt exist")
-            end
-        else
-            print("Action canncelled")
-        end
-    end)
-end, {})
-
-function hookfiles_ren(fname, flt)
-    local source_path = hooks.path .. '/.hook_files/' .. fname
-    M.hook_files("RENAME " .. source_path:match("([^/]+)$"), flt)
-end
-
 function hookfiles_cp_ex(file, target)
+    if target:sub(-1) == ":" then target = target:sub(1, -2) end
+
     function cp(file, target)
         vim.fn.system('cp ' .. file .. ' ' .. target)
         print(file:match("([^/]+)$") .. " -> " .. target:match("([^/]+)$") .. " [COPIED]")
@@ -359,14 +270,13 @@ function hookfiles_cp_ex(file, target)
         return
     end
 
-    if target:match("([^/]+)$") == file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
+    if target:match("([^/]+)$") == utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
         vim.ui.input({
             prompt = "COPY TO CURRENT WORKSPACE ?! Overwrite? (y/n): "
         }, function(input)
             if input == "y" then
-                hookfiles(file:match("([^/]+)$"))
-                cp(target, file)
-                --print(file:match("([^/]+)$") .. " -> " .. target:match("([^/]+)$") .. " [COPIED]")
+                cp(file, target)
+                hooks.on_buffer_enter()
             else
                 print("Copy cancelled")
             end
@@ -388,13 +298,48 @@ function hookfiles_cp_ex(file, target)
     cp(file, target)
 end
 
+vim.api.nvim_create_user_command('Wm', function() 
+    if workspace_dir_isempty() then
+        print("There are no workspaces")
+        return
+    end
+
+    vim.ui.input({
+        prompt = "Current workspace? (y/n): "
+    }, function(input)
+        flt = utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
+        if input == "n" then
+            M.hook_files("RENAME", flt) 
+        elseif input == "y" then
+            local path = utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER)
+            if path and path ~= "" then
+                hookfiles_ren(path, flt)
+            else
+                print("Workspace doesnt exist")
+            end
+        else
+            print("Action canncelled")
+        end
+    end)
+end, {})
+
+function hookfiles_ren(fname, flt)
+    local source_path = hooks.path .. '/.hook_files/' .. fname
+    M.hook_files("RENAME " .. source_path:match("([^/]+)$"), flt)
+end
+
+
 function hookfiles_ren_ex(file, target)
+    if target:sub(-1) == ":" then target = target:sub(1, -2) end
+
     function ren(file, target)
         vim.fn.rename(file, target)
-        if file:match("([^/]+)$") == file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
+        if file:match("([^/]+)$") == utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
             bookmark(target:match("([^/]+)$"), hooks.path .. "/.hook_files/" .. M.MARKER)
             set_hookfiles(target:match("([^/]+)$"))
+            hooks.rehook(hooks.path .. '/.hook_files/' .. target:match("([^/]+)$"))
         end
+        vim.cmd("redraw")
         print(file:match("([^/]+)$") .. " -> " .. target:match("([^/]+)$") .. " [RENAMED]")
     end
 
@@ -403,18 +348,13 @@ function hookfiles_ren_ex(file, target)
         return
     end
 
-    if target:match("([^/]+)$") == file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
+    if target:match("([^/]+)$") == utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
         vim.ui.input({
             prompt = "RENAME TO CURRENT WORKSPACE ?! Overwrite? (y/n): "
         }, function(input)
             if input == "y" then
-                hookfiles(file:match("([^/]+)$"))
-                local success, err = os.remove(target)
-                if not success then
-                    print(fname .. " not deleted; error: " .. err)
-                    return
-                end
-                print(file:match("([^/]+)$") .. " -> " .. target:match("([^/]+)$" .. " [RENAMED]"))
+                ren(file, target)
+                hooks.on_buffer_enter()
             else
                 print("Rename cancelled")
             end
@@ -426,6 +366,8 @@ function hookfiles_ren_ex(file, target)
         }, function(input)
             if input == "y" then
                 ren(file, target)
+                set_hookfiles()
+                hooks.on_buffer_enter()
             else
                 print("Rename cancelled")
             end
@@ -438,6 +380,17 @@ end
 
 vim.api.nvim_create_user_command('Wd', function() M.hook_files("DELETE") end, {})
 function hookfiles_del(fname)
+    if fname:sub(-1) == ":" then fname = fname:sub(1, -2) end
+    if workspace_dir_isempty() then
+        print("There are no workspaces")
+        return
+    end
+
+    if fname == utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
+        print("Cannot delete self.")
+        return
+    end
+
     vim.ui.input({
         prompt = "Delete file? Are you sure? (y/n): "
     }, function(input)
@@ -500,7 +453,7 @@ end
 
 vim.api.nvim_create_user_command('Seed', function()
     local files = list_files(hooks.path .. "/.hook_files")
-    local content = file_content(hooks.path .. "/hooks")
+    local content = utils.file_content(hooks.path .. "/hooks")
     local content_lines = split_lines(content)
     
     for _, file in ipairs(files) do
@@ -528,7 +481,7 @@ end, {})
 
 vim.api.nvim_create_user_command('Weed', function()
     local files = list_files(hooks.path .. "/.hook_files")
-    local content = file_content(hooks.path .. "/hooks")
+    local content = utils.file_content(hooks.path .. "/hooks")
     local lines_to_remove = split_lines(content)
     
     for _, file in ipairs(files) do
@@ -560,7 +513,5 @@ vim.api.nvim_create_user_command('Weed', function()
         end
     end
 end, {})
-
-M.file_content = file_content
 
 return M

@@ -1,3 +1,6 @@
+package.path = package.path .. ";/home/saifr/.config/nvim/plugin/hooks/?.lua"
+local utils = require'utilities'
+
 local M = {}
 
 term_dict = {}
@@ -87,7 +90,18 @@ local function get_buffer_path()
 end
 
 local path = get_buffer_path()
-local hooks = path..'/hooks'
+
+local function path_exists(path)
+    local stat = vim.loop.fs_stat(path)
+    return stat ~= nil
+end
+
+workspace = path .. '/.hook_files'
+
+hooks = nil
+if path_exists(path .. '/.hook_files') then
+    hooks = path .. '/.hook_files/' .. utils.file_content(path .. '/.hook_files/__f__')
+end
 
 local function fname_aux()
     local file = bufname[vim.api.nvim_get_current_buf()]
@@ -106,6 +120,7 @@ local function fname_aux_set(file)
         file = {file, "term"}
     elseif file == hooks then
         file = {file, "hooks"}
+        print("file: " .. file)
     else
         file = {file, "file"}
     end
@@ -323,27 +338,23 @@ end
 
 -- funcs continued
 local hooks_fired = false
-local function rehook_helper()
-    vim.cmd("set autochdir")
-    local path = get_buffer_path()
-    hooks = path..'/hooks'
+local function rehook_helper(path)
+    hooks = path
 
-    --local idx = chk_num(fname())
     local opts = lines_from(hooks)
-    --tmux_protocol(idx, opts)
     tmux_protocol(opts)
 
     if not file_exists(hooks) then 
         print("hooks doesn't exist") 
     else
-        vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
+        vim.cmd([[autocmd InsertEnter ]] .. hooks .. [[ call PlaceSigns(-1,-1)]])
         hooks_fired = true
     end
 end
 
-local function rehook()
+function rehook(path)
     if is_modified() == false then
-        rehook_helper()
+        rehook_helper(path)
     else
         print("save modified buffers")
     end
@@ -434,14 +445,51 @@ local function signs(n,m)
     if m == nil then
         m = 0
     end
-    vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter hooks call 
-    \PlaceSigns(]] .. n-1 .. [[, ]] .. m-1 .. [[)]])
+
+    if hooks then
+        vim.cmd([[autocmd CursorMoved,BufWritePost,BufWinEnter ]] .. hooks .. [[ call PlaceSigns(]] .. n-1 .. [[, ]] .. m-1 .. [[)]])
+    end
+end
+
+local function setup_hook_files()
+    -- Create the .hook_files directory
+    local success = os.execute("mkdir -p " .. workspace)
+    
+    if not success then
+        print("Failed to create directory: " .. workspace)
+        return
+    end
+    
+    -- Create and write to __f__ file
+    local f_file = io.open(workspace .. "/__f__", "w")
+    if f_file then
+        f_file:write("__hooks__")
+        f_file:close()
+    else
+        print("Failed to create __f__ file")
+        return
+    end
+    
+    -- Create empty __hooks__ file
+    local hooks_file = io.open(workspace .. "/__hooks__", "w")
+    if hooks_file then
+        hooks_file:close()
+    else
+        print("Failed to create __hooks__ file")
+        return
+    end
 end
 
 n_shad = file_line_number[vim.api.nvim_buf_get_name(0)]
 local function hook_file()
     vim.cmd("silent on")
     local path, args = format_path(current_buffer)
+
+    if not path_exists(workspace) then
+        setup_hook_files()
+        hooks = get_buffer_path() .. '/.hook_files/__hooks__'
+    end
+
     if vim.fn.isdirectory(path) == 0 then 
         local n = file_line_number[vim.api.nvim_buf_get_name(0)]
         if n ~= nil then
@@ -455,7 +503,8 @@ local function hook_file()
             signs(n_shad, ERROR_LINE)
         end
     end
-    vim.cmd("e "..hooks)
+
+    vim.cmd("e " .. hooks)
     bufname[vim.api.nvim_get_current_buf()] = {hooks, "hooks"}
     ERROR_LINE = 0
 end
@@ -468,6 +517,7 @@ local function hook_term()
     vim.cmd("te")
 end
 
+-- HAHAHAHAHAHAHA
 local function write_hooks(n, tpath)
     local lines = {}
     local file = io.open(hooks, "r")
@@ -785,6 +835,7 @@ function kill_flag_set(bool_val)
 end
 
 M = {
+    rehook = rehook,
     path = path,
     on_buffer_enter = on_buffer_enter,
     fname_cleaned = fname_cleaned,
