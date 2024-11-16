@@ -467,9 +467,9 @@ local function signs(n, m)
 
   if hooks then
     vim.cmd(
-      [[autocmd CursorMovedI,BufWritePost,BufWinEnter,TextChanged,TextChangedI,TextChangedP,InsertLeave]]
+      [[autocmd CursorMovedI,BufWritePost,BufWinEnter,TextChanged,TextChangedI,TextChangedP,InsertLeave ]]
         .. hooks
-        .. [[call PlaceSigns(]]
+        .. [[ call PlaceSigns(]]
         .. n - 1
         .. [[, ]]
         .. m - 1
