@@ -724,6 +724,15 @@ local function hook(n)
 
   path, args = format_path(opts[n])
 
+  -- Check if path is surrounded by asterisks (workspace mode)
+  if string.sub(path, 1, 1) == "*" and string.sub(path, -1) == "*" then
+    -- Extract workspace name (remove asterisks)
+    local workspace_name = string.sub(path, 2, -2)
+    -- Switch to workspace using the same function telescope calls
+    hookfiles(workspace_name)
+    return
+  end
+
   if string.sub(path, -1) == "/" then
     print("CANNOT END PATH WITH '/'  " .. n)
     ERROR_LINE = n

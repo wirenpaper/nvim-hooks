@@ -514,4 +514,24 @@ vim.api.nvim_create_user_command('Weed', function()
     end
 end, {})
 
+vim.keymap.set("n", "fe", function()
+  local workspaces_file = hooks.path .. '/.hook_files/__workspaces__'
+  
+  -- Check if __workspaces__ file exists
+  if not file_exists(workspaces_file) then
+    -- Create empty __workspaces__ file
+    local file = io.open(workspaces_file, "w")
+    if file then
+      file:close()
+      print("Created empty __workspaces__ file")
+    else
+      print("Failed to create __workspaces__ file")
+      return
+    end
+  end
+  
+  -- Use rehook to show workspaces in tmux tabs
+  hooks.rehook(workspaces_file, true)
+end, {})
+
 return M
