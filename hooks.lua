@@ -1,5 +1,5 @@
-package.path = package.path .. ';/home/saifr/.config/nvim/plugin/hooks/?.lua'
-local utils = require 'utilities'
+package.path = package.path .. ";/home/saifr/.config/nvim/plugin/hooks/?.lua"
+local utils = require("utilities")
 
 local M = {}
 
@@ -9,27 +9,27 @@ meta_names = {}
 
 function key_map(n)
   if n == 1 then
-    return 'j'
+    return "j"
   elseif n == 2 then
-    return 'k'
+    return "k"
   elseif n == 3 then
-    return 'l'
+    return "l"
   elseif n == 4 then
-    return ';'
+    return ";"
   elseif n == 5 then
-    return 'm'
+    return "m"
   elseif n == 6 then
-    return ','
+    return ","
   elseif n == 7 then
-    return '.'
+    return "."
   elseif n == 8 then
-    return '/'
+    return "/"
   end
 end
 
 function file_exists(path)
   if path ~= nil then
-    local f = io.open(path, 'r')
+    local f = io.open(path, "r")
     if f ~= nil then
       io.close(f)
       return true
@@ -40,8 +40,8 @@ function file_exists(path)
 end
 
 local function clean_spaces(str)
-  local str = string.gsub(str, ' [^%S\n]+', ' ')
-  if str:sub(1, 1) == ' ' then
+  local str = string.gsub(str, " [^%S\n]+", " ")
+  if str:sub(1, 1) == " " then
     return str:sub(2)
   else
     return str
@@ -54,7 +54,7 @@ local function format_path(str)
     return nil
   end
   str = clean_spaces(str)
-  local i, j = string.find(str, ' ')
+  local i, j = string.find(str, " ")
   if i then
     return string.sub(str, 1, i - 1), string.sub(str, j + 1)
   else
@@ -64,7 +64,7 @@ end
 
 function remove_slash(s)
   -- Check if the last character is a "/"
-  if string.sub(s, -1) == '/' then
+  if string.sub(s, -1) == "/" then
     -- Remove the last character
     s = string.sub(s, 1, -2)
   end
@@ -74,18 +74,18 @@ end
 
 function get_end_path_name(s)
   local t = {}
-  for str in string.gmatch(s, '([^/]+)') do
+  for str in string.gmatch(s, "([^/]+)") do
     t = str
   end
   return t
 end
 
 function get_after_space(str)
-  local i = string.find(str, ' ') -- find the first space
+  local i = string.find(str, " ") -- find the first space
   if i then -- if there is a space
     return string.sub(str, i + 1) -- return the substring after the space
   else -- if there is no space
-    return '' -- return an empty string
+    return "" -- return an empty string
   end
 end
 
@@ -94,7 +94,7 @@ local function get_buffer_path()
   if vim.fn.isdirectory(path) ~= 0 then
     return path
   elseif file_exists(path) then
-    return vim.fn.fnamemodify(path, ':h')
+    return vim.fn.fnamemodify(path, ":h")
   else
     return vim.loop.cwd()
   end
@@ -107,20 +107,20 @@ local function path_exists(path)
   return stat ~= nil
 end
 
-workspace = path .. '/.hook_files'
+workspace = path .. "/.hook_files"
 
 hooks = nil
-if path_exists(path .. '/.hook_files') then
-  hooks = path .. '/.hook_files/' .. utils.file_content(path .. '/.hook_files/__f__')
+if path_exists(path .. "/.hook_files") then
+  hooks = path .. "/.hook_files/" .. utils.file_content(path .. "/.hook_files/__f__")
 end
 
 local function fname_aux()
   local file = bufname[vim.api.nvim_get_current_buf()]
   if file == nil then
     if vim.api.nvim_buf_get_name(0) == hooks then
-      file = { vim.api.nvim_buf_get_name(0), 'hooks' }
+      file = { vim.api.nvim_buf_get_name(0), "hooks" }
     else
-      file = { vim.api.nvim_buf_get_name(0), 'file' }
+      file = { vim.api.nvim_buf_get_name(0), "file" }
     end
   end
   return file
@@ -128,20 +128,20 @@ end
 
 local function fname_aux_set(file)
   if vim.fn.isdirectory(file) ~= 0 then
-    file = { file, 'term' }
+    file = { file, "term" }
   elseif file == hooks then
-    file = { file, 'hooks' }
-    print('file: ' .. file)
+    file = { file, "hooks" }
+    print("file: " .. file)
   else
-    file = { file, 'file' }
+    file = { file, "file" }
   end
   return file
 end
 
 function has_multiple_slashes_in_row(s)
   local i = 1
-  for c in s:gmatch '.' do
-    if i ~= #s and string.sub(s, i, i) == '/' and string.sub(s, i + 1, i + 1) == '/' then
+  for c in s:gmatch(".") do
+    if i ~= #s and string.sub(s, i, i) == "/" and string.sub(s, i + 1, i + 1) == "/" then
       return true
     end
     i = i + 1
@@ -149,25 +149,25 @@ function has_multiple_slashes_in_row(s)
   return false
 end
 
-local file_args = ''
+local file_args = ""
 local function fname_cleaned()
-  if fname_aux()[2] == 'file' then
-    if file_args == '' then
+  if fname_aux()[2] == "file" then
+    if file_args == "" then
       return vim.api.nvim_buf_get_name(0)
     else
       return vim.api.nvim_buf_get_name(0)
     end
-  elseif fname_aux()[2] == 'hooks' then
-    return vim.api.nvim_buf_get_name(0) .. '⇁ '
+  elseif fname_aux()[2] == "hooks" then
+    return vim.api.nvim_buf_get_name(0) .. "⇁ "
   else
     local path = format_path(fname_aux()[1])
 
     local first = get_end_path_name(path)
-    if string.sub(path, -1) == '/' then
-      first = first .. '/'
+    if string.sub(path, -1) == "/" then
+      first = first .. "/"
     end
     local last = get_after_space(fname_aux()[1])
-    if last == '' then
+    if last == "" then
       local opts = lines_from(hooks)
       tmux_protocol(opts)
       return vim.fn.getcwd()
@@ -181,23 +181,23 @@ end
 
 local function fname_set_cleaned(file)
   local path, args = format_path(file)
-  if fname_aux_set(path)[2] == 'file' then
+  if fname_aux_set(path)[2] == "file" then
     if args == nil then
-      return ' ' .. get_end_path_name(path) .. '@ '
+      return " " .. get_end_path_name(path) .. "@ "
     else
-      return ' ' .. get_end_path_name(path) .. '@' .. ' -- ' .. args .. ' '
+      return " " .. get_end_path_name(path) .. "@" .. " -- " .. args .. " "
     end
   else
     if args == nil then
-      return ' [ ' .. get_end_path_name(path) .. ' ] '
+      return " [ " .. get_end_path_name(path) .. " ] "
     else
-      return ' [ ' .. get_end_path_name(path) .. ' ]' .. ' -- ' .. args .. ' '
+      return " [ " .. get_end_path_name(path) .. " ]" .. " -- " .. args .. " "
     end
   end
 end
 
 local function is_tmux_running()
-  local tmux_check_command = 'tmux list-sessions'
+  local tmux_check_command = "tmux list-sessions"
   local status = os.execute(tmux_check_command)
 
   if status == 0 then
@@ -215,24 +215,24 @@ end
 
 local mod_flag = false
 
-cmode = 'dark'
+cmode = "dark"
 
-vim.api.nvim_create_autocmd({ 'VimEnter', 'ColorScheme' }, {
-  pattern = '*',
+vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
+  pattern = "*",
   callback = function()
-    cmode = 'dark'
+    cmode = "dark"
     color = vim.g.colors_name
-    if color == 'quiet' then
-      cmode = 'light'
+    if color == "quiet" then
+      cmode = "light"
     end
-    if color == 'darkness' then
-      cmode = 'dark'
+    if color == "darkness" then
+      cmode = "dark"
     end
     tmux_protocol(gropts)
   end,
 })
 
-gropts = ''
+gropts = ""
 
 function tmux_protocol(opts)
   gropts = opts
@@ -240,7 +240,7 @@ function tmux_protocol(opts)
     return
   end
 
-  local tmux_string = ''
+  local tmux_string = ""
   local km = key_map(n)
   local n = 0
   if file_exists(fname()) == false or term_dict[fname()] ~= nil then
@@ -249,48 +249,54 @@ function tmux_protocol(opts)
     n = file_line_number[meta_names[fname()]]
   end
 
-  local cc1 = ''
-  local cc2 = ''
-  local cc3 = ''
-  local cc4 = ''
+  local cc1 = ""
+  local cc2 = ""
+  local cc3 = ""
+  local cc4 = ""
 
   --dark mode
-  if cmode == 'dark' then
-    cc1 = '#[fg=colour16]#[bg=darkgray]'
-    cc2 = '#[fg=lightgray]#[bg=colour16]'
-    cc3 = '#[fg=colour16]#[bg=white]'
-    cc4 = '#[fg=colour16]#[bg=dimgray]'
+  if cmode == "dark" then
+    cc1 = "#[fg=black]#[bg=darkgray]"
+    cc2 = "#[fg=lightgray]#[bg=black]"
+    cc3 = "#[fg=black]#[bg=white]"
+    cc4 = "#[fg=black]#[bg=dimgray]"
   end
 
   --light mode
-  if cmode == 'light' then
-    cc1 = '#[fg=colour16]#[bg=darkgray]'
-    cc2 = '#[fg=black]#[bg=white]'
-    cc3 = '#[fg=black]#[bg=orange]'
-    cc4 = '#[fg=black]#[bg=cyan]'
+  if cmode == "light" then
+    cc1 = "#[fg=black]#[bg=darkgray]"
+    cc2 = "#[fg=black]#[bg=white]"
+    cc3 = "#[fg=black]#[bg=orange]"
+    cc4 = "#[fg=black]#[bg=cyan]"
   end
 
   --disabling for now
 
   --if mod_flag == true then
-  --cc4 = "#[fg=colour16]#[bg=pink]"
+  --cc4 = "#[fg=black]#[bg=pink]"
   --end
 
-  if type(opts) == 'table' then
+  if type(opts) == "table" then
     for i, v in ipairs(opts) do
       if i > 8 then
         break
       end
-      if v ~= '' and key_map(n) ~= key_map(i) then
+      if v ~= "" and key_map(n) ~= key_map(i) then
         tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
-      elseif v ~= '' and key_map(n) == key_map(i) then
+      elseif v ~= "" and key_map(n) == key_map(i) then
         tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
       end
     end
   end
-  local function_name = 'update_tmux_status_line'
+  local function_name = "update_tmux_status_line"
   local line_number = 0
-  local command = 'python3 /home/saifr/scripts/tmux.py ' .. function_name .. ' ' .. line_number .. " '" .. tmux_string .. "'"
+  local command = "python3 /home/saifr/scripts/tmux.py "
+    .. function_name
+    .. " "
+    .. line_number
+    .. " '"
+    .. tmux_string
+    .. "'"
   os.execute(command)
 end
 
@@ -314,10 +320,10 @@ local function pfname_aux()
 end
 
 local function pfname()
-  if fname_aux()[2] == 'term' then
+  if fname_aux()[2] == "term" then
     local str = fname_aux()[1]
-    if string.sub(str, -1) ~= '/' then
-      print(pfname_aux() .. '/')
+    if string.sub(str, -1) ~= "/" then
+      print(pfname_aux() .. "/")
     else
       print(pfname_aux())
     end
@@ -354,7 +360,7 @@ local function rehook_helper(path)
   tmux_protocol(opts)
 
   if not file_exists(hooks) then
-    print "hooks doesn't exist"
+    print("hooks doesn't exist")
   else
     vim.cmd([[autocmd InsertEnter ]] .. hooks .. [[ call PlaceSigns(-1,-1)]])
     hooks_fired = true
@@ -365,7 +371,7 @@ function rehook(path)
   if is_modified() == false then
     rehook_helper(path)
   else
-    print 'save modified buffers'
+    print("save modified buffers")
   end
 end
 
@@ -378,7 +384,7 @@ kill_flag = false
 
 function is_file(path)
   local stat = vim.loop.fs_stat(path)
-  return stat and stat.type == 'file'
+  return stat and stat.type == "file"
 end
 
 file_line_number = {}
@@ -394,13 +400,13 @@ function lines_from(file)
     return 0
   end
   for line in io.lines(file) do
-    local tmp_line = ''
+    local tmp_line = ""
     if is_file(format_path(line)) then
       tmp_line = format_path(line)
     end
-    if tmp_line == '' then
-      if dups[line] ~= nil and dups[line] ~= '' then
-        print('DUPLICATE hooks:' .. #lines + 1)
+    if tmp_line == "" then
+      if dups[line] ~= nil and dups[line] ~= "" then
+        print("DUPLICATE hooks:" .. #lines + 1)
         ERROR_LINE = #lines + 1
         kill_flag = true
         return
@@ -408,8 +414,8 @@ function lines_from(file)
         dups[line] = line
       end
     else
-      if dups[tmp_line] ~= nil and dups[tmp_line] ~= '' then
-        print('DUPLICATE hooks:' .. #lines + 1)
+      if dups[tmp_line] ~= nil and dups[tmp_line] ~= "" then
+        print("DUPLICATE hooks:" .. #lines + 1)
         ERROR_LINE = #lines + 1
         kill_flag = true
         return
@@ -425,7 +431,7 @@ function lines_from(file)
 end
 
 -- #TODO vimscript -> lua
-vim.cmd [[
+vim.cmd([[
 function! PlaceSigns(n,m)
     " First clear all signs
     execute 'sign unplace * buffer=' . bufnr('%')
@@ -455,7 +461,7 @@ function! PlaceSigns(n,m)
         endif
     endfor
 endfunction
-]]
+]])
 
 local function signs(n, m)
   if n == nil then
@@ -480,41 +486,41 @@ end
 
 local function setup_hook_files()
   -- Create the .hook_files directory
-  local success = os.execute('mkdir -p ' .. workspace)
+  local success = os.execute("mkdir -p " .. workspace)
 
   if not success then
-    print('Failed to create directory: ' .. workspace)
+    print("Failed to create directory: " .. workspace)
     return
   end
 
   -- Create and write to __f__ file
-  local f_file = io.open(workspace .. '/__f__', 'w')
+  local f_file = io.open(workspace .. "/__f__", "w")
   if f_file then
-    f_file:write '__hooks__'
+    f_file:write("__hooks__")
     f_file:close()
   else
-    print 'Failed to create __f__ file'
+    print("Failed to create __f__ file")
     return
   end
 
   -- Create empty __hooks__ file
-  local hooks_file = io.open(workspace .. '/__hooks__', 'w')
+  local hooks_file = io.open(workspace .. "/__hooks__", "w")
   if hooks_file then
     hooks_file:close()
   else
-    print 'Failed to create __hooks__ file'
+    print("Failed to create __hooks__ file")
     return
   end
 end
 
 n_shad = file_line_number[vim.api.nvim_buf_get_name(0)]
 local function hook_file()
-  vim.cmd 'silent on'
+  vim.cmd("silent on")
   local path, args = format_path(current_buffer)
 
   if not path_exists(workspace) then
     setup_hook_files()
-    hooks = get_buffer_path() .. '/.hook_files/__hooks__'
+    hooks = get_buffer_path() .. "/.hook_files/__hooks__"
   end
 
   if vim.fn.isdirectory(path) == 0 then
@@ -531,32 +537,32 @@ local function hook_file()
     end
   end
 
-  vim.cmd('e ' .. hooks)
-  bufname[vim.api.nvim_get_current_buf()] = { hooks, 'hooks' }
+  vim.cmd("e " .. hooks)
+  bufname[vim.api.nvim_get_current_buf()] = { hooks, "hooks" }
   ERROR_LINE = 0
 end
 
 local function hook_term()
-  vim.cmd 'on'
+  vim.cmd("on")
   hook_file()
-  vim.cmd 'sp'
-  vim.cmd 'wincmd j'
-  vim.cmd 'te'
+  vim.cmd("sp")
+  vim.cmd("wincmd j")
+  vim.cmd("te")
 end
 
 -- HAHAHAHAHAHAHA
 local function write_hooks(n, tpath)
   local lines = {}
-  local file = io.open(hooks, 'r')
+  local file = io.open(hooks, "r")
   for line in file:lines() do
     table.insert(lines, line)
   end
   file:close()
 
   lines[n] = tpath
-  file = io.open(hooks, 'w')
+  file = io.open(hooks, "w")
   for _, line in ipairs(lines) do
-    file:write(line, '\n')
+    file:write(line, "\n")
   end
   file:close()
 end
@@ -565,64 +571,64 @@ local function term_retag(params)
   local n = file_line_number[current_buffer]
   local tag = params.args
   if file_exists(fname()) == false or term_dict[fname()] ~= nil then
-    if tag == '' then
+    if tag == "" then
       if path ~= fname() then
         if dups[path] ~= nil then
-          print 'RETAG DENIED -- DUPLICATE'
+          print("RETAG DENIED -- DUPLICATE")
           return
         end
         buffers[path] = vim.api.nvim_get_current_buf()
-        bufname[vim.api.nvim_get_current_buf()] = { path, 'term' }
+        bufname[vim.api.nvim_get_current_buf()] = { path, "term" }
         term_dict[path] = path
         term_bufnum[path] = vim.api.nvim_get_current_buf()
         write_hooks(n, path)
       elseif path == fname() then
-        print 'RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH'
+        print("RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH")
       end
     else
-      if path .. ' ' .. tag ~= fname() then
-        if dups[path .. ' ' .. tag] ~= nil then
-          print 'RETAG DENIED -- DUPLICATE'
+      if path .. " " .. tag ~= fname() then
+        if dups[path .. " " .. tag] ~= nil then
+          print("RETAG DENIED -- DUPLICATE")
           return
         end
-        buffers[path .. ' ' .. tag] = vim.api.nvim_get_current_buf()
-        bufname[vim.api.nvim_get_current_buf()] = { path .. ' ' .. tag, 'term' }
-        term_dict[path .. ' ' .. tag] = path
-        term_bufnum[path .. ' ' .. tag] = vim.api.nvim_get_current_buf()
-        write_hooks(n, path .. ' ' .. tag)
-      elseif path .. ' ' .. tag == fname() then
-        print 'RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH'
+        buffers[path .. " " .. tag] = vim.api.nvim_get_current_buf()
+        bufname[vim.api.nvim_get_current_buf()] = { path .. " " .. tag, "term" }
+        term_dict[path .. " " .. tag] = path
+        term_bufnum[path .. " " .. tag] = vim.api.nvim_get_current_buf()
+        write_hooks(n, path .. " " .. tag)
+      elseif path .. " " .. tag == fname() then
+        print("RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH")
       end
     end
   else
-    print 'ERROR: NOT A TERMINAL BUFFER'
+    print("ERROR: NOT A TERMINAL BUFFER")
   end
 end
-vim.api.nvim_create_user_command('TermRetag', function(params)
+vim.api.nvim_create_user_command("TermRetag", function(params)
   term_retag(params)
-end, { nargs = '*' })
+end, { nargs = "*" })
 
 term_bufnum = {}
 local function set_dir_mode2(path, args)
-  vim.cmd('te cd ' .. path .. ' && $SHELL')
-  buffers[path .. ' ' .. args] = vim.api.nvim_get_current_buf()
-  bufname[vim.api.nvim_get_current_buf()] = { path .. ' ' .. args, 'term' }
+  vim.cmd("te cd " .. path .. " && $SHELL")
+  buffers[path .. " " .. args] = vim.api.nvim_get_current_buf()
+  bufname[vim.api.nvim_get_current_buf()] = { path .. " " .. args, "term" }
   term_dict[fname()] = path
   term_bufnum[fname()] = vim.api.nvim_get_current_buf()
   vim.api.nvim_set_current_dir(path)
 end
 
 local function set_dir_mode1(path)
-  vim.cmd('te cd ' .. path .. ' && $SHELL')
+  vim.cmd("te cd " .. path .. " && $SHELL")
   buffers[path] = vim.api.nvim_get_current_buf()
-  bufname[vim.api.nvim_get_current_buf()] = { path, 'term' }
+  bufname[vim.api.nvim_get_current_buf()] = { path, "term" }
   term_dict[fname()] = path
   term_bufnum[fname()] = vim.api.nvim_get_current_buf()
   vim.api.nvim_set_current_dir(path)
 end
 
 local function hook_mode2(n, args)
-  current_buffer = path .. ' ' .. args
+  current_buffer = path .. " " .. args
   if vim.fn.isdirectory(path) ~= 0 then
     if is_modified() then
       --print("TERMINAL BUFFER: UNSAVED MODIFIED BUFFER(S)")
@@ -630,9 +636,9 @@ local function hook_mode2(n, args)
     if buffers[current_buffer] == nil then
       set_dir_mode2(path, args)
     else
-      local buf_loaded = vim.api.nvim_buf_is_loaded(buffers[path .. ' ' .. args])
+      local buf_loaded = vim.api.nvim_buf_is_loaded(buffers[path .. " " .. args])
       if buf_loaded == true then
-        vim.api.nvim_set_current_buf(buffers[path .. ' ' .. args])
+        vim.api.nvim_set_current_buf(buffers[path .. " " .. args])
       else
         set_dir_mode2(path, args)
       end
@@ -640,20 +646,20 @@ local function hook_mode2(n, args)
   elseif file_exists(path) then
     file_args = args
     if buffers[path] == nil then
-      vim.cmd('e ' .. path)
+      vim.cmd("e " .. path)
       buffers[path] = vim.api.nvim_get_current_buf()
-      bufname[vim.api.nvim_get_current_buf()] = { path, 'file' }
+      bufname[vim.api.nvim_get_current_buf()] = { path, "file" }
     else
       vim.api.nvim_set_current_buf(buffers[path])
     end
   else
-    print('MALFORMED hooks:' .. n)
+    print("MALFORMED hooks:" .. n)
     ERROR_LINE = n
   end
 end
 
 local function hook_mode1(n)
-  file_args = ''
+  file_args = ""
   current_buffer = path
   if vim.fn.isdirectory(path) ~= 0 then
     if is_modified() then
@@ -671,35 +677,35 @@ local function hook_mode1(n)
     end
   elseif file_exists(path) then
     if path == hooks then
-      print 'cannot reference current hookfile'
+      print("cannot reference current hookfile")
       ERROR_LINE = n
       return
     end
 
     if buffers[path] == nil then
-      vim.cmd('e ' .. path)
+      vim.cmd("e " .. path)
       buffers[path] = vim.api.nvim_get_current_buf()
-      bufname[vim.api.nvim_get_current_buf()] = { path, 'file' }
+      bufname[vim.api.nvim_get_current_buf()] = { path, "file" }
     else
       vim.api.nvim_set_current_buf(buffers[path])
     end
   else
-    print('MALFORMED hooks:' .. n)
+    print("MALFORMED hooks:" .. n)
     ERROR_LINE = n
   end
 end
 
-vim.cmd [[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]]
+vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 
 local function hook(n)
   if vim.fn.filereadable(hooks) == 0 then
-    print "hooks file doesn't exist or isn't readble"
+    print("hooks file doesn't exist or isn't readble")
     return
   end
   ERROR_LINE = 0
-  vim.cmd 'silent on'
+  vim.cmd("silent on")
   if file_exists(hooks) == false then
-    print 'HOOKS NOT FOUND'
+    print("HOOKS NOT FOUND")
     return
   end
   local opts = lines_from(hooks)
@@ -710,13 +716,13 @@ local function hook(n)
   end
 
   if opts[n] == nil then
-    print('UNSET hooks:' .. n)
+    print("UNSET hooks:" .. n)
     return
   end
 
   path, args = format_path(opts[n])
 
-  if string.sub(path, -1) == '/' then
+  if string.sub(path, -1) == "/" then
     print("CANNOT END PATH WITH '/'  " .. n)
     ERROR_LINE = n
     signs(n_shad, ERROR_LINE)
@@ -724,14 +730,14 @@ local function hook(n)
   end
 
   if has_multiple_slashes_in_row(path) then
-    print('REPEAT SLASHES NOT ALLOWED ' .. n)
+    print("REPEAT SLASHES NOT ALLOWED " .. n)
     ERROR_LINE = n
     signs(n_shad, ERROR_LINE)
     return
   end
 
-  if path == '' then
-    print('UNSET hooks:' .. n)
+  if path == "" then
+    print("UNSET hooks:" .. n)
     return
   end
   if args == nil then
@@ -759,12 +765,12 @@ local function copy_filename()
     end
   end
   if file ~= nil then
-    print('COPIED TO CLIPBOARD: ' .. file)
+    print("COPIED TO CLIPBOARD: " .. file)
   else
     file = vim.api.nvim_buf_get_name(0)
-    print('COPIED TO CLIPBOARD: ' .. file)
+    print("COPIED TO CLIPBOARD: " .. file)
   end
-  vim.api.nvim_call_function('setreg', { '+', file })
+  vim.api.nvim_call_function("setreg", { "+", file })
 end
 
 function term_buffer_directory_onchange()
@@ -799,9 +805,15 @@ end
 
 nvim_exit_flag = false
 local function on_neovim_exit()
-  local function_name = 'update_tmux_status_line'
+  local function_name = "update_tmux_status_line"
   local line_number = 0
-  local command = 'python3 /home/saifr/scripts/tmux.py ' .. function_name .. ' ' .. line_number .. " '" .. '#[fg=red]NVIM EXITED' .. "'"
+  local command = "python3 /home/saifr/scripts/tmux.py "
+    .. function_name
+    .. " "
+    .. line_number
+    .. " '"
+    .. "#[fg=red]NVIM EXITED"
+    .. "'"
   os.execute(command)
   nvim_exit_flag = true
 end
@@ -815,85 +827,85 @@ local function on_buf_save()
 end
 
 function register_autocommands()
-  vim.api.nvim_create_autocmd('BufEnter', { pattern = '*', callback = on_buffer_enter })
-  vim.api.nvim_create_autocmd('VimLeave', { callback = on_neovim_exit })
-  vim.api.nvim_create_autocmd('BufWritePost', { callback = on_buf_save })
+  vim.api.nvim_create_autocmd("BufEnter", { pattern = "*", callback = on_buffer_enter })
+  vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
+  vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
 
-  if file_exists(hooks) and os.getenv 'TMUX' == nil then
-    print "hooks -- TMUX ISN'T STARTED"
+  if file_exists(hooks) and os.getenv("TMUX") == nil then
+    print("hooks -- TMUX ISN'T STARTED")
   end
 end
 
 -- key bindings
-vim.keymap.set('n', 'fj', function()
+vim.keymap.set("n", "fj", function()
   hook(1)
 end)
-vim.keymap.set('n', 'fk', function()
+vim.keymap.set("n", "fk", function()
   hook(2)
 end)
-vim.keymap.set('n', 'fl', function()
+vim.keymap.set("n", "fl", function()
   hook(3)
 end)
-vim.keymap.set('n', 'f;', function()
+vim.keymap.set("n", "f;", function()
   hook(4)
 end)
-vim.keymap.set('n', 'fm', function()
+vim.keymap.set("n", "fm", function()
   hook(5)
 end)
-vim.keymap.set('n', 'f,', function()
+vim.keymap.set("n", "f,", function()
   hook(6)
 end)
-vim.keymap.set('n', 'f.', function()
+vim.keymap.set("n", "f.", function()
   hook(7)
 end)
-vim.keymap.set('n', 'f/', function()
+vim.keymap.set("n", "f/", function()
   hook(8)
 end)
-vim.keymap.set('n', 'fs', function()
+vim.keymap.set("n", "fs", function()
   hook_term()
 end)
-vim.keymap.set('n', 'fa', function()
+vim.keymap.set("n", "fa", function()
   copy_filename()
 end)
-vim.keymap.set('n', 'fd', function()
+vim.keymap.set("n", "fd", function()
   hook_file()
 end)
-vim.keymap.set('n', 'fn', function()
+vim.keymap.set("n", "fn", function()
   pfname()
 end, {})
 
 local function tmux_warning()
-  print 'tmux is off'
+  print("tmux is off")
 end
 
 function search_current_line()
   --Yank the current line
-  vim.api.nvim_command 'normal! yy'
+  vim.api.nvim_command("normal! yy")
 
   --Get the yanked line from the unnamed register
-  local line = vim.fn.getreg '0'
+  local line = vim.fn.getreg("0")
 
   --Escape special characters
-  line = line:gsub('([\\^$.*\\[\\]])', '\\%1')
+  line = line:gsub("([\\^$.*\\[\\]])", "\\%1")
 
   --Perform the search
   vim.api.nvim_command("let @/ = '" .. line .. "'")
 end
 
 -- Map the function to a key, for example <leader>l
-vim.api.nvim_set_keymap('n', '<leader>l', ':lua search_current_line()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<leader>l", ":lua search_current_line()<CR>", { noremap = true, silent = true })
 
 -- commands
-vim.api.nvim_create_user_command('ReHook', function()
+vim.api.nvim_create_user_command("ReHook", function()
   rehook()
 end, {})
-vim.api.nvim_create_user_command('ReHookForce', function()
+vim.api.nvim_create_user_command("ReHookForce", function()
   rehook_force()
 end, {})
-vim.api.nvim_create_user_command('TBdc', function()
+vim.api.nvim_create_user_command("TBdc", function()
   term_buffer_directory_onchange()
 end, {})
-vim.api.nvim_create_user_command('Warn', function()
+vim.api.nvim_create_user_command("Warn", function()
   tmux_warning()
 end, {})
 
