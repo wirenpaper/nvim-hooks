@@ -353,7 +353,8 @@ end
 
 -- funcs continued
 local hooks_fired = false
-local function rehook_helper(path)
+local should_kill_terminals = true
+local function rehook_helper(path, skip_terminal_kill)
   hooks = path
 
   local opts = lines_from(hooks)
@@ -364,19 +365,20 @@ local function rehook_helper(path)
   else
     vim.cmd([[autocmd InsertEnter ]] .. hooks .. [[ call PlaceSigns(-1,-1)]])
     hooks_fired = true
+    should_kill_terminals = not skip_terminal_kill
   end
 end
 
-function rehook(path)
+function rehook(path, skip_terminal_kill)
   if is_modified() == false then
-    rehook_helper(path)
+    rehook_helper(path, skip_terminal_kill)
   else
     print("save modified buffers")
   end
 end
 
 local function rehook_force()
-  rehook_helper()
+  rehook_helper(nil, false)
 end
 
 ERROR_LINE = 0
@@ -795,10 +797,12 @@ local function on_buffer_enter()
   end
 
   if hooks_fired == true then
-    for key, value in pairs(term_bufnum) do
-      vim.cmd([[bd! ]] .. value)
+    if should_kill_terminals then
+      for key, value in pairs(term_bufnum) do
+        vim.cmd([[bd! ]] .. value)
+      end
+      term_bufnum = {}
     end
-    term_bufnum = {}
     hooks_fired = false
   end
 end

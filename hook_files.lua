@@ -223,7 +223,7 @@ end, {})
 function hookfiles(fname)
     bookmark(fname, marker_path)
     set_hookfiles(fname)
-    hooks.rehook(hooks.path .. '/.hook_files/' .. fname)
+    hooks.rehook(hooks.path .. '/.hook_files/' .. fname, true)
 end
 
 vim.api.nvim_create_user_command('Wy', function()
