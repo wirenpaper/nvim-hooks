@@ -109,6 +109,7 @@ end
 
 workspace = path .. "/.hook_files"
 
+ws = nil
 hooks = nil
 if path_exists(path .. "/.hook_files") then
   hooks = path .. "/.hook_files/" .. utils.file_content(path .. "/.hook_files/__f__")
@@ -240,6 +241,10 @@ function tmux_protocol(opts)
     return
   end
 
+  if not string.match(get_end_path_name(hooks), "__workspaces__") then -- lololol
+    ws = get_end_path_name(hooks)
+  end
+
   local tmux_string = ""
   local km = key_map(n)
   local n = 0
@@ -282,7 +287,15 @@ function tmux_protocol(opts)
         break
       end
       if v ~= "" and key_map(n) ~= key_map(i) then
-        tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+        if not string.match(get_end_path_name(hooks), "__workspaces__") then
+          tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+        end
+        if string.match(fname_set_cleaned(v), ws) and string.match(get_end_path_name(hooks), "__workspaces__") then
+          tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+        end
+        if not string.match(fname_set_cleaned(v), ws) and string.match(get_end_path_name(hooks), "__workspaces__") then
+          tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+        end
       elseif v ~= "" and key_map(n) == key_map(i) then
         tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
       end
