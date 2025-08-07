@@ -567,7 +567,6 @@ local function hook_term()
   vim.cmd("te")
 end
 
--- HAHAHAHAHAHAHA
 local function write_hooks(n, tpath)
   local lines = {}
   local file = io.open(hooks, "r")
