@@ -241,7 +241,7 @@ function tmux_protocol(opts)
     return
   end
 
-  if not string.match(get_end_path_name(hooks), "__workspaces__") then -- lololol
+  if not string.match(get_end_path_name(hooks), "__workspaces__") then
     ws = get_end_path_name(hooks)
   end
 
@@ -289,12 +289,14 @@ function tmux_protocol(opts)
       if v ~= "" and key_map(n) ~= key_map(i) then
         if not string.match(get_end_path_name(hooks), "__workspaces__") then
           tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
-        end
-        if string.match(fname_set_cleaned(v), ws) and string.match(get_end_path_name(hooks), "__workspaces__") then
-          tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
-        end
-        if not string.match(fname_set_cleaned(v), ws) and string.match(get_end_path_name(hooks), "__workspaces__") then
-          tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+        else
+          local s = get_end_path_name(v)
+          s = string.sub(s, 2, -2)
+          if s == ws then
+            tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+          else
+            tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+          end
         end
       elseif v ~= "" and key_map(n) == key_map(i) then
         tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
