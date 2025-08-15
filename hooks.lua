@@ -312,6 +312,8 @@ function tmux_protocol(opts)
     .. " '"
     .. tmux_string
     .. "'"
+
+  -- this is synchronous and blocking, make blocking later
   os.execute(command)
 end
 
