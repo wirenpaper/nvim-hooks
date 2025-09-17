@@ -73,7 +73,12 @@ function remove_slash(s)
 end
 
 function get_end_path_name(s)
-  local t = {}
+  -- If 's' is not a string or is nil, return an empty string immediately.
+  if type(s) ~= "string" then
+    return ""
+  end
+
+  local t = "" -- It's good practice to initialize with a default value.
   for str in string.gmatch(s, "([^/]+)") do
     t = str
   end
@@ -235,6 +240,133 @@ vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
 
 gropts = ""
 
+---Polls for a value and executes a callback when it's available.
+---@param producer_func function: A function that returns the value you're waiting for. Should return nil if not ready.
+---@param on_success_callback function: The function to run with the value once it's no longer nil.
+function poll_for_value(producer_func, on_success_callback)
+  local timer = vim.loop.new_timer()
+  local attempts = 0
+  local max_attempts = 40 -- Give up after 2 seconds (40 * 50ms)
+  local is_closing = false -- <<< The new guard flag
+
+  timer:start(
+    0,
+    50,
+    vim.schedule_wrap(function()
+      -- If we're already closing, do nothing. This prevents the "already closing" error.
+      if is_closing then
+        return
+      end
+
+      local value = producer_func()
+      if value ~= nil then
+        is_closing = true -- <<< Set the flag first
+        timer:close()
+        on_success_callback(value)
+      else
+        attempts = attempts + 1
+        if attempts > max_attempts then
+          is_closing = true -- <<< Set the flag first
+          timer:close()
+          -- vim.notify("Error: Timed out waiting for file_line_number.", vim.log.levels.ERROR)
+        end
+      end
+    end)
+  )
+end
+
+function tmux_protocol2(opts)
+  gropts = opts
+  if nvim_exit_flag == true then
+    return
+  end
+
+  if not string.match(get_end_path_name(hooks), "__workspaces__") then
+    ws = get_end_path_name(hooks)
+  end
+
+  -- This local function contains all of your original logic that needs to run
+  -- AFTER the line number 'n' has been successfully retrieved.
+  local function build_and_execute_tmux_command(n)
+    local tmux_string = ""
+    local km = key_map(n)
+
+    local cc1 = ""
+    local cc2 = ""
+    local cc3 = ""
+    local cc4 = ""
+
+    --dark mode
+    if cmode == "dark" then
+      cc1 = "#[fg=#000000]#[bg=darkgray]"
+      cc2 = "#[fg=lightgray]#[bg=#000000]"
+      cc3 = "#[fg=#000000]#[bg=white]"
+      cc4 = "#[fg=#000000]#[bg=dimgray]"
+    end
+
+    --light mode
+    if cmode == "light" then
+      cc1 = "#[fg=black]#[bg=darkgray]"
+      cc2 = "#[fg=black]#[bg=white]"
+      cc3 = "#[fg=black]#[bg=orange]"
+      cc4 = "#[fg=black]#[bg=cyan]"
+    end
+
+    if type(opts) == "table" then
+      for i, v in ipairs(opts) do
+        if i > 8 then
+          break
+        end
+        if v ~= "" and key_map(n) ~= key_map(i) then
+          if not string.match(get_end_path_name(hooks), "__workspaces__") then
+            tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+          else
+            local s = get_end_path_name(v)
+            s = string.sub(s, 2, -2)
+            if s == ws then
+              tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+            else
+              tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+            end
+          end
+        elseif v ~= "" and key_map(n) == key_map(i) then
+          tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+        end
+      end
+    end
+    local function_name = "update_tmux_status_line"
+    local line_number = 0
+    local command = "python3 /home/saifr/scripts/tmux.py "
+      .. function_name
+      .. " "
+      .. line_number
+      .. " '"
+      .. tmux_string
+      .. "'"
+
+    -- this is synchronous and blocking, make blocking later
+    os.execute(command)
+  end
+
+  -- This block now determines HOW to get the line number 'n', and then passes
+  -- it to the function above for processing.
+  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+    -- ASYNC CASE: The value is not ready yet.
+    -- We poll for the value, and once we have it, we run our logic.
+    poll_for_value(
+      function()
+        return file_line_number[fname()]
+      end,
+      build_and_execute_tmux_command -- The function to run on success
+    )
+  else
+    -- SYNC CASE: The value is ready immediately.
+    -- We get it directly and run our logic right away.
+    local n = file_line_number[meta_names[fname()]]
+    build_and_execute_tmux_command(n)
+  end
+end
+
 function tmux_protocol(opts)
   gropts = opts
   if nvim_exit_flag == true then
@@ -248,6 +380,7 @@ function tmux_protocol(opts)
   local tmux_string = ""
   local km = key_map(n)
   local n = 0
+
   if file_exists(fname()) == false or term_dict[fname()] ~= nil then
     n = file_line_number[fname()]
   else
@@ -261,10 +394,10 @@ function tmux_protocol(opts)
 
   --dark mode
   if cmode == "dark" then
-    cc1 = "#[fg=black]#[bg=darkgray]"
-    cc2 = "#[fg=lightgray]#[bg=black]"
-    cc3 = "#[fg=black]#[bg=white]"
-    cc4 = "#[fg=black]#[bg=dimgray]"
+    cc1 = "#[fg=#000000]#[bg=darkgray]"
+    cc2 = "#[fg=lightgray]#[bg=#000000]"
+    cc3 = "#[fg=#000000]#[bg=white]"
+    cc4 = "#[fg=#000000]#[bg=dimgray]"
   end
 
   --light mode
@@ -715,6 +848,8 @@ end
 
 vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 
+global_n = nil
+
 local function hook(n)
   if vim.fn.filereadable(hooks) == 0 then
     print("hooks file doesn't exist or isn't readble")
@@ -748,6 +883,8 @@ local function hook(n)
     hookfiles(workspace_name)
     return
   end
+  -- lolololololol
+  -- vim.notify("wtf")
 
   if string.sub(path, -1) == "/" then
     print("CANNOT END PATH WITH '/'  " .. n)
@@ -804,6 +941,34 @@ function term_buffer_directory_onchange()
   term_dict[fname()] = vim.fn.getcwd()
 end
 
+local function on_buffer_enter2()
+  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+    if is_modified() then
+      mod_flag = true
+    end
+  else
+    mod_flag = false
+  end
+
+  local opts = lines_from(hooks)
+  tmux_protocol2(opts)
+
+  if term_dict[fname()] ~= nil then
+    local path, _ = format_path(term_dict[fname()])
+    vim.api.nvim_set_current_dir(path)
+  end
+
+  if hooks_fired == true then
+    if should_kill_terminals then
+      for key, value in pairs(term_bufnum) do
+        vim.cmd([[bd! ]] .. value)
+      end
+      term_bufnum = {}
+    end
+    hooks_fired = false
+  end
+end
+
 local function on_buffer_enter()
   if file_exists(fname()) == false or term_dict[fname()] ~= nil then
     if is_modified() then
@@ -857,6 +1022,7 @@ end
 
 function register_autocommands()
   vim.api.nvim_create_autocmd("BufEnter", { pattern = "*", callback = on_buffer_enter })
+  vim.api.nvim_create_autocmd("TermOpen", { pattern = "*", callback = on_buffer_enter2 })
   vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
 
@@ -899,6 +1065,13 @@ end)
 vim.keymap.set("n", "fd", function()
   hook_file()
 end)
+vim.keymap.set("n", "fi", function()
+  if vim.wo.signcolumn == "yes" then
+    vim.wo.signcolumn = "no"
+  else
+    vim.wo.signcolumn = "yes"
+  end
+end) --, { desc = "Toggle Sign Column" })
 vim.keymap.set("n", "fn", function()
   pfname()
 end, {})
@@ -941,6 +1114,10 @@ end, {})
 function kill_flag_set(bool_val)
   kill_flag = bool_val
 end
+
+register_autocommands()
+signs(0, 0)
+kill_flag_set(false)
 
 M = {
   rehook = rehook,

@@ -1,6 +1,6 @@
 package.path = package.path .. ";/home/saifr/.config/nvim/plugin/hooks/?.lua"
 local hooks = require("hooks")
-local lualine = require("lualine")
+-- local lualine = require("lualine")
 local utils = require("utilities")
 
 local M = {}
@@ -57,16 +57,18 @@ local function bookmark(fname, marker_path)
   end
 end
 
-local function set_hookfiles(fname)
-  local config = lualine.get_config()
-  config.sections.lualine_x[3] = function()
-    return fname
-  end
-  config.inactive_sections.lualine_x[3] = function()
-    return fname
-  end
-  lualine.setup(config)
-end
+--[[
+   [ local function set_hookfiles(fname)
+   [   local config = lualine.get_config()
+   [   config.sections.lualine_x[3] = function()
+   [     return fname
+   [   end
+   [   config.inactive_sections.lualine_x[3] = function()
+   [     return fname
+   [   end
+   [   lualine.setup(config)
+   [ end
+   ]]
 
 local function comp(ArgLead, CmdLine, CursorPos)
   local files = vim.fn.readdir(hooks.path .. "/.hook_files/", function(name)
@@ -228,7 +230,7 @@ end, {})
 
 function hookfiles(fname)
   bookmark(fname, marker_path)
-  set_hookfiles(fname)
+  -- set_hookfiles(fname)
   hooks.rehook(hooks.path .. "/.hook_files/" .. fname, true)
 end
 
@@ -345,7 +347,7 @@ function hookfiles_ren_ex(file, target)
     vim.fn.rename(file, target)
     if file:match("([^/]+)$") == utils.file_content(hooks.path .. "/.hook_files/" .. M.MARKER) then
       bookmark(target:match("([^/]+)$"), hooks.path .. "/.hook_files/" .. M.MARKER)
-      set_hookfiles(target:match("([^/]+)$"))
+      -- set_hookfiles(target:match("([^/]+)$"))
       hooks.rehook(hooks.path .. "/.hook_files/" .. target:match("([^/]+)$"))
     end
     vim.cmd("redraw")
@@ -375,7 +377,7 @@ function hookfiles_ren_ex(file, target)
     }, function(input)
       if input == "y" then
         ren(file, target)
-        set_hookfiles()
+        -- set_hookfiles()
         hooks.on_buffer_enter()
       else
         print("Rename cancelled")
