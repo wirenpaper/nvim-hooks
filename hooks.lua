@@ -118,7 +118,6 @@ local function jump_to_position(line_num, col_num, label, filepath)
     if found_line then
       vim.api.nvim_win_set_cursor(0, {found_line, found_col - 1})
       vim.cmd('normal! zz') -- Center the screen
-      print("Jumped to label: " .. label)
     else
       print("Label not found: " .. label)
     end
@@ -239,7 +238,6 @@ local function fname_aux()
   return file
 end
 
---<<b1>>--
 local function fname_aux_set(file)
   if vim.fn.isdirectory(file) ~= 0 then
     file = { file, "term" }
@@ -310,7 +308,6 @@ local function fname_set_cleaned(file)
           display_args = ":" .. line_num
         end
       end
-      --return " " .. get_end_path_name(path) .. "@" .. " -- " .. display_args .. " "
       return " " .. get_end_path_name(path) .. "@" .. display_args .. " "
     end
   else
@@ -359,6 +356,12 @@ vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
 
 gropts = ""
 
+--vim.api.nvim_set_hl(0, 'TabKeyStyled', {
+ -- fg = '#ff8800',      -- Orange text
+ -- bg = '#333333',      -- Dark grey background
+ -- bold = true,
+ -- italic = true
+--})
 function tmux_protocol(opts)
   gropts = opts
   if nvim_exit_flag == true then
@@ -378,50 +381,19 @@ function tmux_protocol(opts)
   else
   end
 
-  local cc1 = ""
-  local cc2 = ""
-  local cc3 = ""
-  local cc4 = ""
-
-  --dark mode
-  if cmode == "dark" then
-    cc1 = "#[fg=#000000]#[bg=darkgray]"
-    cc2 = "#[fg=lightgray]#[bg=#000000]"
-    cc3 = "#[fg=#000000]#[bg=white]"
-    cc4 = "#[fg=#000000]#[bg=dimgray]"
-  end
-
-  --light mode
-  if cmode == "light" then
-    cc1 = "#[fg=black]#[bg=darkgray]"
-    cc2 = "#[fg=black]#[bg=white]"
-    cc3 = "#[fg=black]#[bg=orange]"
-    cc4 = "#[fg=black]#[bg=cyan]"
-  end
-
   if type(opts) == "table" then
     for i, v in ipairs(opts) do
       if i > 8 then
         break
       end
-      --tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
-      tmux_string = tmux_string .. key_map(i) .. fname_set_cleaned(v)
-      vim.o.statusline = tmux_string
 
+      --<<tabbar>>--
+      --tmux_string = tmux_string .. key_map(i) .. fname_set_cleaned(v)
+      tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
+      vim.o.showtabline = 2
+      vim.o.tabline = tmux_string
     end
   end
-  local function_name = "update_tmux_status_line"
-  local line_number = 0
-  local command = "python3 /home/saifr/scripts/tmux.py "
-    .. function_name
-    .. " "
-    .. line_number
-    .. " '"
-    .. tmux_string
-    .. "'"
-
-  -- this is synchronous and blocking, make non-blocking later
-  -- os.execute(command)
 end
 
 local function pfname_aux()
@@ -824,6 +796,8 @@ local function hook(n)
     print("UNSET hooks:" .. n)
     return
   end
+  --<<b1>>--
+  print("jmp:" .. fname_set_cleaned(opts[n]))
 
   path, args = format_path(opts[n])
 
@@ -835,8 +809,6 @@ local function hook(n)
     hookfiles(workspace_name)
     return
   end
-  -- lolololololol
-  -- vim.notify("wtf")
 
   if string.sub(path, -1) == "/" then
     print("CANNOT END PATH WITH '/'  " .. n)
