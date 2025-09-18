@@ -57,19 +57,6 @@ local function bookmark(fname, marker_path)
   end
 end
 
---[[
-   [ local function set_hookfiles(fname)
-   [   local config = lualine.get_config()
-   [   config.sections.lualine_x[3] = function()
-   [     return fname
-   [   end
-   [   config.inactive_sections.lualine_x[3] = function()
-   [     return fname
-   [   end
-   [   lualine.setup(config)
-   [ end
-   ]]
-
 local function comp(ArgLead, CmdLine, CursorPos)
   local files = vim.fn.readdir(hooks.path .. "/.hook_files/", function(name)
     return name ~= M.MARKER and name:sub(1, #ArgLead) == ArgLead

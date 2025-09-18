@@ -359,132 +359,6 @@ vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
 
 gropts = ""
 
----Polls for a value and executes a callback when it's available.
----@param producer_func function: A function that returns the value you're waiting for. Should return nil if not ready.
----@param on_success_callback function: The function to run with the value once it's no longer nil.
-function poll_for_value(producer_func, on_success_callback)
-  local timer = vim.loop.new_timer()
-  local attempts = 0
-  local max_attempts = 40 -- Give up after 2 seconds (40 * 50ms)
-  local is_closing = false -- <<< The new guard flag
-
-  timer:start(
-    0,
-    50,
-    vim.schedule_wrap(function()
-      -- If we're already closing, do nothing. This prevents the "already closing" error.
-      if is_closing then
-        return
-      end
-
-      local value = producer_func()
-      if value ~= nil then
-        is_closing = true -- <<< Set the flag first
-        timer:close()
-        on_success_callback(value)
-      else
-        attempts = attempts + 1
-        if attempts > max_attempts then
-          is_closing = true -- <<< Set the flag first
-          timer:close()
-          -- vim.notify("Error: Timed out waiting for file_line_number.", vim.log.levels.ERROR)
-        end
-      end
-    end)
-  )
-end
-
-function tmux_protocol2(opts)
-  gropts = opts
-  if nvim_exit_flag == true then
-    return
-  end
-
-  if not string.match(get_end_path_name(hooks), "__workspaces__") then
-    ws = get_end_path_name(hooks)
-  end
-
-  -- This local function contains all of your original logic that needs to run
-  -- AFTER the line number 'n' has been successfully retrieved.
-  local function build_and_execute_tmux_command(n)
-    local tmux_string = ""
-    local km = key_map(n)
-
-    local cc1 = ""
-    local cc2 = ""
-    local cc3 = ""
-    local cc4 = ""
-
-    --dark mode
-    if cmode == "dark" then
-      cc1 = "#[fg=#000000]#[bg=darkgray]"
-      cc2 = "#[fg=lightgray]#[bg=#000000]"
-      cc3 = "#[fg=#000000]#[bg=white]"
-      cc4 = "#[fg=#000000]#[bg=dimgray]"
-    end
-
-    --light mode
-    if cmode == "light" then
-      cc1 = "#[fg=black]#[bg=darkgray]"
-      cc2 = "#[fg=black]#[bg=white]"
-      cc3 = "#[fg=black]#[bg=orange]"
-      cc4 = "#[fg=black]#[bg=cyan]"
-    end
-
-    if type(opts) == "table" then
-      for i, v in ipairs(opts) do
-        if i > 8 then
-          break
-        end
-        if v ~= "" and key_map(n) ~= key_map(i) then
-          if not string.match(get_end_path_name(hooks), "__workspaces__") then
-            tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
-          else
-            local s = get_end_path_name(v)
-            s = string.sub(s, 2, -2)
-            if s == ws then
-              tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
-            else
-              tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
-            end
-          end
-        elseif v ~= "" and key_map(n) == key_map(i) then
-          tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
-        end
-      end
-    end
-    local function_name = "update_tmux_status_line"
-    local line_number = 0
-    local command = "python3 /home/saifr/scripts/tmux.py "
-      .. function_name
-      .. " "
-      .. line_number
-      .. " '"
-      .. tmux_string
-      .. "'"
-
-    -- this is synchronous and blocking, make blocking later
-    os.execute(command)
-  end
-
-  -- This block now determines HOW to get the line number 'n', and then passes
-  -- it to the function above for processing.
-  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
-    -- ASYNC CASE: The value is not ready yet.
-    -- We poll for the value, and once we have it, we run our logic.
-    poll_for_value(
-      function()
-        return file_line_number[fname()]
-      end,
-      build_and_execute_tmux_command -- The function to run on success
-    )
-  else
-    -- SYNC CASE: The value is ready immediately.
-    -- We get it directly and run our logic right away.
-    build_and_execute_tmux_command(n)
-  end
-end
-
 function tmux_protocol(opts)
   gropts = opts
   if nvim_exit_flag == true then
@@ -1117,13 +991,8 @@ end
 
 function register_autocommands()
   vim.api.nvim_create_autocmd("BufEnter", { pattern = "*", callback = on_buffer_enter })
-  vim.api.nvim_create_autocmd("TermOpen", { pattern = "*", callback = on_buffer_enter2 })
   vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
-
-  -- if file_exists(hooks) and os.getenv("TMUX") == nil then
-    -- print("hooks -- TMUX ISN'T STARTED")
-  -- end
 end
 
 -- key bindings
