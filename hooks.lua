@@ -5,7 +5,6 @@ local M = {}
 
 term_dict = {}
 bufname = {}
-meta_names = {}
 
 function key_map(n)
   if n == 1 then
@@ -482,7 +481,6 @@ function tmux_protocol2(opts)
   else
     -- SYNC CASE: The value is ready immediately.
     -- We get it directly and run our logic right away.
-    local n = file_line_number[meta_names[fname()]]
     build_and_execute_tmux_command(n)
   end
 end
@@ -504,7 +502,6 @@ function tmux_protocol(opts)
   if file_exists(fname()) == false or term_dict[fname()] ~= nil then
     n = file_line_number[fname()]
   else
-    n = file_line_number[meta_names[fname()]]
   end
 
   local cc1 = ""
@@ -675,7 +672,6 @@ function lines_from(file)
     if is_file(format_path(line)) then
       tmp_line = format_path(line)
     end
-    meta_names[format_path(line)] = line
     lines[#lines + 1] = line
     file_line_number[line] = #lines
   end
