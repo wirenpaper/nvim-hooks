@@ -27,6 +27,49 @@ function key_map(n)
   end
 end
 
+local function parse_line_column(args)
+  if args == nil or args == "" then
+    return nil, nil
+  end
+  
+  -- Split arguments by space
+  local parts = {}
+  for part in args:gmatch("%S+") do
+    table.insert(parts, part)
+  end
+  
+  local line_num = nil
+  local col_num = nil
+  
+  -- First argument should be line number
+  if parts[1] and tonumber(parts[1]) then
+    line_num = tonumber(parts[1])
+  end
+  
+  -- Second argument should be column number
+  if parts[2] and tonumber(parts[2]) then
+    col_num = tonumber(parts[2])
+  end
+  
+  return line_num, col_num
+end
+
+-- Add this function to jump to line and column
+local function jump_to_position(line_num, col_num)
+  if line_num then
+    -- Jump to the specified line
+    vim.api.nvim_win_set_cursor(0, {line_num, 0})
+    
+    -- If column is specified, jump to that column too
+    if col_num then
+      vim.api.nvim_win_set_cursor(0, {line_num, col_num - 1}) -- Vim uses 0-based column indexing
+    end
+    
+    -- Center the screen on the cursor
+    vim.cmd('normal! zz')
+  end
+end
+
 function file_exists(path)
   if path ~= nil then
     local f = io.open(path, "r")
@@ -541,9 +584,7 @@ end
 
 -- commencing removal duplicate checks
 file_line_number = {}
-local dups = {}
 function lines_from(file)
-  dups = {}
   file_line_number = {}
   if not file_exists(file) then
     return {}
@@ -557,26 +598,7 @@ function lines_from(file)
     if is_file(format_path(line)) then
       tmp_line = format_path(line)
     end
-    if tmp_line == "" then
-      if dups[line] ~= nil and dups[line] ~= "" then
-        print("DUPLICATE hooks:" .. #lines + 1)
-        ERROR_LINE = #lines + 1
-        kill_flag = true
-        return
-      else
-        dups[line] = line
-      end
-    else
-      if dups[tmp_line] ~= nil and dups[tmp_line] ~= "" then
-        print("DUPLICATE hooks:" .. #lines + 1)
-        ERROR_LINE = #lines + 1
-        kill_flag = true
-        return
-      else
-        dups[tmp_line] = tmp_line
-        meta_names[format_path(line)] = line
-      end
-    end
+    meta_names[format_path(line)] = line
     lines[#lines + 1] = line
     file_line_number[line] = #lines
   end
@@ -725,10 +747,6 @@ local function term_retag(params)
   if file_exists(fname()) == false or term_dict[fname()] ~= nil then
     if tag == "" then
       if path ~= fname() then
-        if dups[path] ~= nil then
-          print("RETAG DENIED -- DUPLICATE")
-          return
-        end
         buffers[path] = vim.api.nvim_get_current_buf()
         bufname[vim.api.nvim_get_current_buf()] = { path, "term" }
         term_dict[path] = path
@@ -739,10 +757,6 @@ local function term_retag(params)
       end
     else
       if path .. " " .. tag ~= fname() then
-        if dups[path .. " " .. tag] ~= nil then
-          print("RETAG DENIED -- DUPLICATE")
-          return
-        end
         buffers[path .. " " .. tag] = vim.api.nvim_get_current_buf()
         bufname[vim.api.nvim_get_current_buf()] = { path .. " " .. tag, "term" }
         term_dict[path .. " " .. tag] = path
