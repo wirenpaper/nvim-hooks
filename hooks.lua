@@ -1026,9 +1026,9 @@ function register_autocommands()
   vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
 
-  if file_exists(hooks) and os.getenv("TMUX") == nil then
-    print("hooks -- TMUX ISN'T STARTED")
-  end
+  -- if file_exists(hooks) and os.getenv("TMUX") == nil then
+    -- print("hooks -- TMUX ISN'T STARTED")
+  -- end
 end
 
 -- key bindings
