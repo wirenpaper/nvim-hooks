@@ -399,32 +399,12 @@ function tmux_protocol(opts)
     cc4 = "#[fg=black]#[bg=cyan]"
   end
 
-  --disabling for now
-
-  --if mod_flag == true then
-  --cc4 = "#[fg=black]#[bg=pink]"
-  --end
-
   if type(opts) == "table" then
     for i, v in ipairs(opts) do
       if i > 8 then
         break
       end
-      if v ~= "" and key_map(n) ~= key_map(i) then
-        if not string.match(get_end_path_name(hooks), "__workspaces__") then
-          tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
-        else
-          local s = get_end_path_name(v)
-          s = string.sub(s, 2, -2)
-          if s == ws then
-            tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
-          else
-            tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
-          end
-        end
-      elseif v ~= "" and key_map(n) == key_map(i) then
-        tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
-      end
+      tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
     end
   end
   local function_name = "update_tmux_status_line"
@@ -437,7 +417,7 @@ function tmux_protocol(opts)
     .. tmux_string
     .. "'"
 
-  -- this is synchronous and blocking, make blocking later
+  -- this is synchronous and blocking, make non-blocking later
   os.execute(command)
 end
 
