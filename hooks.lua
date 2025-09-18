@@ -230,11 +230,23 @@ end
 
 local function fname_set_cleaned(file)
   local path, args = format_path(file)
+  local line_num, col_num = parse_line_column(args)
+  
   if fname_aux_set(path)[2] == "file" then
     if args == nil then
       return " " .. get_end_path_name(path) .. "@ "
     else
-      return " " .. get_end_path_name(path) .. "@" .. " -- " .. args .. " "
+      local display_args = args
+      -- If we have line/col info, format it nicely for display
+      if line_num then
+        if col_num then
+          display_args = ":" .. line_num .. ":" .. col_num
+        else
+          display_args = ":" .. line_num
+        end
+      end
+      --return " " .. get_end_path_name(path) .. "@" .. " -- " .. display_args .. " "
+      return " " .. get_end_path_name(path) .. "@" .. display_args .. " "
     end
   else
     if args == nil then
@@ -244,7 +256,6 @@ local function fname_set_cleaned(file)
     end
   end
 end
-
 local function is_tmux_running()
   local tmux_check_command = "tmux list-sessions"
   local status = os.execute(tmux_check_command)
