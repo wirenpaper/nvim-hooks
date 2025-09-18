@@ -539,6 +539,7 @@ function is_file(path)
   return stat and stat.type == "file"
 end
 
+-- commencing removal duplicate checks
 file_line_number = {}
 local dups = {}
 function lines_from(file)
