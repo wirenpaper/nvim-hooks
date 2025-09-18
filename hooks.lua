@@ -27,12 +27,71 @@ function key_map(n)
   end
 end
 
-local function parse_line_column(args)
-  if args == nil or args == "" then
+-- Add this function to search for labels in a file
+local function find_label_in_file(filepath, label)
+  if not file_exists(filepath) then
     return nil, nil
   end
   
-  -- Split arguments by space
+  local line_num = 1
+  local pattern = "--<<" .. label .. ">>--"
+  
+  for line in io.lines(filepath) do
+    -- Check if the line contains our label pattern
+    if string.find(line, pattern, 1, true) then -- true for plain text search
+      -- Find the column position of the pattern
+      local col_start = string.find(line, pattern, 1, true)
+      return line_num, col_start
+    end
+    line_num = line_num + 1
+  end
+  
+  return nil, nil -- Label not found
+end
+
+-- Optional: Add a command to list all labels in current file
+local function list_labels_in_current_file()
+  local current_file = vim.api.nvim_buf_get_name(0)
+  if not file_exists(current_file) then
+    print("No file to search")
+    return
+  end
+  
+  local labels = {}
+  local line_num = 1
+  
+  for line in io.lines(current_file) do
+    -- Look for our label pattern
+    local label = string.match(line, "--<<(.-)>>--")
+    if label then
+      table.insert(labels, {line = line_num, label = label, text = line:gsub("^%s+", "")})
+    end
+    line_num = line_num + 1
+  end
+  
+  if #labels == 0 then
+    print("No labels found in current file")
+  else
+    print("Labels found:")
+    for _, item in ipairs(labels) do
+      print("  Line " .. item.line .. ": " .. item.label .. " -> " .. item.text)
+    end
+  end
+end
+
+local function parse_line_column(args)
+  if args == nil or args == "" then
+    return nil, nil, nil -- line_num, col_num, label
+  end
+  
+  -- Check if it's a label (non-numeric argument)
+  local first_arg = args:match("%S+")
+  if first_arg and not tonumber(first_arg) then
+    -- It's a label
+    return nil, nil, first_arg
+  end
+  
+  -- Otherwise, parse as line/column numbers (existing functionality)
   local parts = {}
   for part in args:gmatch("%S+") do
     table.insert(parts, part)
@@ -41,31 +100,37 @@ local function parse_line_column(args)
   local line_num = nil
   local col_num = nil
   
-  -- First argument should be line number
   if parts[1] and tonumber(parts[1]) then
     line_num = tonumber(parts[1])
   end
   
-  -- Second argument should be column number
   if parts[2] and tonumber(parts[2]) then
     col_num = tonumber(parts[2])
   end
   
-  return line_num, col_num
+  return line_num, col_num, nil
 end
 
 -- Add this function to jump to line and column
-local function jump_to_position(line_num, col_num)
-  if line_num then
-    -- Jump to the specified line
+local function jump_to_position(line_num, col_num, label, filepath)
+  if label then
+    -- Search for the label in the file
+    local found_line, found_col = find_label_in_file(filepath, label)
+    if found_line then
+      vim.api.nvim_win_set_cursor(0, {found_line, found_col - 1})
+      vim.cmd('normal! zz') -- Center the screen
+      print("Jumped to label: " .. label)
+    else
+      print("Label not found: " .. label)
+    end
+  elseif line_num then
+    -- Use existing line/column jump functionality
     vim.api.nvim_win_set_cursor(0, {line_num, 0})
     
-    -- If column is specified, jump to that column too
     if col_num then
-      vim.api.nvim_win_set_cursor(0, {line_num, col_num - 1}) -- Vim uses 0-based column indexing
+      vim.api.nvim_win_set_cursor(0, {line_num, col_num - 1})
     end
     
-    -- Center the screen on the cursor
     vim.cmd('normal! zz')
   end
 end
@@ -175,6 +240,7 @@ local function fname_aux()
   return file
 end
 
+--<<b1>>--
 local function fname_aux_set(file)
   if vim.fn.isdirectory(file) ~= 0 then
     file = { file, "term" }
@@ -804,10 +870,9 @@ local function set_dir_mode1(path)
   vim.api.nvim_set_current_dir(path)
 end
 
--- Modified hook_mode2 function with line/column support
 local function hook_mode2(n, args)
-  -- Parse line and column from args
-  local line_num, col_num = parse_line_column(args)
+  -- Parse arguments for line/col numbers OR labels
+  local line_num, col_num, label = parse_line_column(args)
   
   current_buffer = path .. " " .. args
   if vim.fn.isdirectory(path) ~= 0 then
@@ -834,8 +899,8 @@ local function hook_mode2(n, args)
       vim.api.nvim_set_current_buf(buffers[path])
     end
     
-    -- Jump to line and column after opening the file
-    jump_to_position(line_num, col_num)
+    -- Jump to position or label after opening the file
+    jump_to_position(line_num, col_num, label, path)
     
   else
     print("MALFORMED hooks:" .. n)
