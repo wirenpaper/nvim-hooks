@@ -793,7 +793,11 @@ local function set_dir_mode1(path)
   vim.api.nvim_set_current_dir(path)
 end
 
+-- Modified hook_mode2 function with line/column support
 local function hook_mode2(n, args)
+  -- Parse line and column from args
+  local line_num, col_num = parse_line_column(args)
+  
   current_buffer = path .. " " .. args
   if vim.fn.isdirectory(path) ~= 0 then
     if is_modified() then
@@ -818,6 +822,10 @@ local function hook_mode2(n, args)
     else
       vim.api.nvim_set_current_buf(buffers[path])
     end
+    
+    -- Jump to line and column after opening the file
+    jump_to_position(line_num, col_num)
+    
   else
     print("MALFORMED hooks:" .. n)
     ERROR_LINE = n
