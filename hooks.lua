@@ -910,34 +910,6 @@ function term_buffer_directory_onchange()
   term_dict[fname()] = vim.fn.getcwd()
 end
 
-local function on_buffer_enter2()
-  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
-    if is_modified() then
-      mod_flag = true
-    end
-  else
-    mod_flag = false
-  end
-
-  local opts = lines_from(hooks)
-  tmux_protocol2(opts)
-
-  if term_dict[fname()] ~= nil then
-    local path, _ = format_path(term_dict[fname()])
-    vim.api.nvim_set_current_dir(path)
-  end
-
-  if hooks_fired == true then
-    if should_kill_terminals then
-      for key, value in pairs(term_bufnum) do
-        vim.cmd([[bd! ]] .. value)
-      end
-      term_bufnum = {}
-    end
-    hooks_fired = false
-  end
-end
-
 local function on_buffer_enter()
   if file_exists(fname()) == false or term_dict[fname()] ~= nil then
     if is_modified() then
@@ -991,7 +963,6 @@ end
 
 function register_autocommands()
   vim.api.nvim_create_autocmd("BufEnter", { pattern = "*", callback = on_buffer_enter })
-  vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
 end
 
