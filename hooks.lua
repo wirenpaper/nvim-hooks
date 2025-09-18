@@ -404,7 +404,10 @@ function tmux_protocol(opts)
       if i > 8 then
         break
       end
-      tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+      --tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+      tmux_string = tmux_string .. key_map(i) .. fname_set_cleaned(v)
+      vim.o.statusline = tmux_string
+
     end
   end
   local function_name = "update_tmux_status_line"
@@ -418,7 +421,7 @@ function tmux_protocol(opts)
     .. "'"
 
   -- this is synchronous and blocking, make non-blocking later
-  os.execute(command)
+  -- os.execute(command)
 end
 
 local function pfname_aux()
