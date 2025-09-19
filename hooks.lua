@@ -356,12 +356,6 @@ vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
 
 gropts = ""
 
---vim.api.nvim_set_hl(0, 'TabKeyStyled', {
- -- fg = '#ff8800',      -- Orange text
- -- bg = '#333333',      -- Dark grey background
- -- bold = true,
- -- italic = true
---})
 function tmux_protocol(opts)
   gropts = opts
   if nvim_exit_flag == true then
@@ -922,47 +916,40 @@ function register_autocommands()
 end
 
 -- key bindings
-vim.keymap.set("n", "fj", function()
+vim.keymap.set("n", ",jj", function()
   hook(1)
 end)
-vim.keymap.set("n", "fk", function()
+vim.keymap.set("n", ",jk", function()
   hook(2)
 end)
-vim.keymap.set("n", "fl", function()
+vim.keymap.set("n", ",jl", function()
   hook(3)
 end)
-vim.keymap.set("n", "f;", function()
+vim.keymap.set("n", ",j;", function()
   hook(4)
 end)
-vim.keymap.set("n", "fm", function()
+vim.keymap.set("n", ",jm", function()
   hook(5)
 end)
-vim.keymap.set("n", "f,", function()
+vim.keymap.set("n", ",j,", function()
   hook(6)
 end)
-vim.keymap.set("n", "f.", function()
+vim.keymap.set("n", ",j.", function()
   hook(7)
 end)
-vim.keymap.set("n", "f/", function()
+vim.keymap.set("n", ",j/", function()
   hook(8)
 end)
-vim.keymap.set("n", "fs", function()
+vim.keymap.set("n", ",js", function()
   hook_term()
 end)
-vim.keymap.set("n", "fa", function()
+vim.keymap.set("n", ",ja", function()
   copy_filename()
 end)
-vim.keymap.set("n", "fd", function()
+vim.keymap.set("n", ",jd", function()
   hook_file()
 end)
-vim.keymap.set("n", "fi", function()
-  if vim.wo.signcolumn == "yes" then
-    vim.wo.signcolumn = "no"
-  else
-    vim.wo.signcolumn = "yes"
-  end
-end) --, { desc = "Toggle Sign Column" })
-vim.keymap.set("n", "fn", function()
+vim.keymap.set("n", ",jn", function()
   pfname()
 end, {})
 
