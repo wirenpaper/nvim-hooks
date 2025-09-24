@@ -319,21 +319,27 @@ function tmux_protocol2(opts)
         end
         if v ~= "" and key_map(n) ~= key_map(i) then
           if not string.match(get_end_path_name(hooks), "__workspaces__") then
-            tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+            -- tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
           else
             local s = get_end_path_name(v)
             s = string.sub(s, 2, -2)
             if s == ws then
-              tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+              --tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
             else
-              tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+              --tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
             end
           end
         elseif v ~= "" and key_map(n) == key_map(i) then
-          tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+          --tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
         end
       end
     end
+    vim.o.showtabline = 2
+    vim.o.tabline = tmux_string
     local function_name = "update_tmux_status_line"
     local line_number = 0
     local command = "python3 /home/saifr/scripts/tmux.py "
@@ -345,7 +351,7 @@ function tmux_protocol2(opts)
       .. "'"
 
     -- this is synchronous and blocking, make blocking later
-    os.execute(command)
+    -- os.execute(command)
   end
 
   -- This block now determines HOW to get the line number 'n', and then passes
@@ -421,18 +427,31 @@ function tmux_protocol(opts)
       end
       if v ~= "" and key_map(n) ~= key_map(i) then
         if not string.match(get_end_path_name(hooks), "__workspaces__") then
-          tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+          -- tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+	  tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
+	  vim.o.showtabline = 2
+	  vim.o.tabline = tmux_string
         else
           local s = get_end_path_name(v)
           s = string.sub(s, 2, -2)
           if s == ws then
-            tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+            -- tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+	    --tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
+	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
+	    vim.o.showtabline = 2
+	    vim.o.tabline = tmux_string
           else
-            tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+            -- tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
+	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
+	    vim.o.showtabline = 2
+	    vim.o.tabline = tmux_string
           end
         end
       elseif v ~= "" and key_map(n) == key_map(i) then
-        tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+        -- tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
+	   tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
+	vim.o.showtabline = 2
+	vim.o.tabline = tmux_string
       end
     end
   end
@@ -447,7 +466,7 @@ function tmux_protocol(opts)
     .. "'"
 
   -- this is synchronous and blocking, make blocking later
-  os.execute(command)
+  -- os.execute(command)
 end
 
 local function pfname_aux()
