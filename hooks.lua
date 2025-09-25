@@ -120,6 +120,7 @@ if path_exists(path .. "/.hook_files") then
   hooks = path .. "/.hook_files/" .. utils.file_content(path .. "/.hook_files/__f__")
 end
 
+vim.o.showtabline = 2
 local function fname_aux()
   local file = bufname[vim.api.nvim_get_current_buf()]
   if file == nil then
@@ -285,32 +286,9 @@ function tmux_protocol2(opts)
     ws = get_end_path_name(hooks)
   end
 
-  -- This local function contains all of your original logic that needs to run
-  -- AFTER the line number 'n' has been successfully retrieved.
   local function build_and_execute_tmux_command(n)
     local tmux_string = ""
     local km = key_map(n)
-
-    local cc1 = ""
-    local cc2 = ""
-    local cc3 = ""
-    local cc4 = ""
-
-    --dark mode
-    if cmode == "dark" then
-      cc1 = "#[fg=#000000]#[bg=darkgray]"
-      cc2 = "#[fg=lightgray]#[bg=#000000]"
-      cc3 = "#[fg=#000000]#[bg=white]"
-      cc4 = "#[fg=#000000]#[bg=dimgray]"
-    end
-
-    --light mode
-    if cmode == "light" then
-      cc1 = "#[fg=black]#[bg=darkgray]"
-      cc2 = "#[fg=black]#[bg=white]"
-      cc3 = "#[fg=black]#[bg=orange]"
-      cc4 = "#[fg=black]#[bg=cyan]"
-    end
 
     if type(opts) == "table" then
       for i, v in ipairs(opts) do
@@ -319,39 +297,22 @@ function tmux_protocol2(opts)
         end
         if v ~= "" and key_map(n) ~= key_map(i) then
           if not string.match(get_end_path_name(hooks), "__workspaces__") then
-            -- tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
 	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
           else
             local s = get_end_path_name(v)
             s = string.sub(s, 2, -2)
             if s == ws then
-              --tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
 	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
             else
-              --tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
 	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
             end
           end
         elseif v ~= "" and key_map(n) == key_map(i) then
-          --tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
 	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
         end
       end
     end
-    vim.o.showtabline = 2
     vim.o.tabline = tmux_string
-    local function_name = "update_tmux_status_line"
-    local line_number = 0
-    local command = "python3 /home/saifr/scripts/tmux.py "
-      .. function_name
-      .. " "
-      .. line_number
-      .. " '"
-      .. tmux_string
-      .. "'"
-
-    -- this is synchronous and blocking, make blocking later
-    -- os.execute(command)
   end
 
   -- This block now determines HOW to get the line number 'n', and then passes
@@ -393,33 +354,6 @@ function tmux_protocol(opts)
     n = file_line_number[meta_names[fname()]]
   end
 
-  local cc1 = ""
-  local cc2 = ""
-  local cc3 = ""
-  local cc4 = ""
-
-  --dark mode
-  if cmode == "dark" then
-    cc1 = "#[fg=#000000]#[bg=darkgray]"
-    cc2 = "#[fg=lightgray]#[bg=#000000]"
-    cc3 = "#[fg=#000000]#[bg=white]"
-    cc4 = "#[fg=#000000]#[bg=dimgray]"
-  end
-
-  --light mode
-  if cmode == "light" then
-    cc1 = "#[fg=black]#[bg=darkgray]"
-    cc2 = "#[fg=black]#[bg=white]"
-    cc3 = "#[fg=black]#[bg=orange]"
-    cc4 = "#[fg=black]#[bg=cyan]"
-  end
-
-  --disabling for now
-
-  --if mod_flag == true then
-  --cc4 = "#[fg=black]#[bg=pink]"
-  --end
-
   if type(opts) == "table" then
     for i, v in ipairs(opts) do
       if i > 8 then
@@ -427,46 +361,22 @@ function tmux_protocol(opts)
       end
       if v ~= "" and key_map(n) ~= key_map(i) then
         if not string.match(get_end_path_name(hooks), "__workspaces__") then
-          -- tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
 	  tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
-	  vim.o.showtabline = 2
-	  vim.o.tabline = tmux_string
         else
           local s = get_end_path_name(v)
           s = string.sub(s, 2, -2)
           if s == ws then
-            -- tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
-	    --tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
 	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
-	    vim.o.showtabline = 2
-	    vim.o.tabline = tmux_string
           else
-            -- tmux_string = tmux_string .. cc1 .. key_map(i) .. cc2 .. fname_set_cleaned(v)
 	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
-	    vim.o.showtabline = 2
-	    vim.o.tabline = tmux_string
           end
         end
       elseif v ~= "" and key_map(n) == key_map(i) then
-        -- tmux_string = tmux_string .. cc3 .. key_map(i) .. cc4 .. fname_set_cleaned(v)
 	   tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' ..'%#TabKeySelected#'.. fname_set_cleaned(v)..'%*'
-	vim.o.showtabline = 2
-	vim.o.tabline = tmux_string
       end
     end
   end
-  local function_name = "update_tmux_status_line"
-  local line_number = 0
-  local command = "python3 /home/saifr/scripts/tmux.py "
-    .. function_name
-    .. " "
-    .. line_number
-    .. " '"
-    .. tmux_string
-    .. "'"
-
-  -- this is synchronous and blocking, make blocking later
-  -- os.execute(command)
+  vim.o.tabline = tmux_string
 end
 
 local function pfname_aux()
@@ -865,6 +775,8 @@ local function hook_mode1(n)
   end
 end
 
+-- MARK:solid
+
 vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 
 global_n = nil
@@ -902,8 +814,6 @@ local function hook(n)
     hookfiles(workspace_name)
     return
   end
-  -- lolololololol
-  -- vim.notify("wtf")
 
   if string.sub(path, -1) == "/" then
     print("CANNOT END PATH WITH '/'  " .. n)
@@ -955,6 +865,8 @@ local function copy_filename()
   end
   vim.api.nvim_call_function("setreg", { "+", file })
 end
+
+-- MARK:dang
 
 function term_buffer_directory_onchange()
   term_dict[fname()] = vim.fn.getcwd()
@@ -1044,11 +956,9 @@ function register_autocommands()
   vim.api.nvim_create_autocmd("TermOpen", { pattern = "*", callback = on_buffer_enter2 })
   vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
-
-  -- if file_exists(hooks) and os.getenv("TMUX") == nil then
-    -- print("hooks -- TMUX ISN'T STARTED")
-  -- end
 end
+
+-- MARK:bang
 
 -- key bindings
 vim.keymap.set("n", "fj", function()
@@ -1115,6 +1025,41 @@ end
 
 -- Map the function to a key, for example <leader>l
 vim.api.nvim_set_keymap("n", "<leader>l", ":lua search_current_line()<CR>", { noremap = true, silent = true })
+
+-- Creates the :GotoMark command to jump directly to a named MARK
+vim.api.nvim_create_user_command(
+  'GotoMark',
+  function(opts)
+    local query = opts.args
+    if not query or query == "" then
+      vim.notify("Usage: :GotoMark <mark_name>", vim.log.levels.WARN)
+      return
+    end
+    
+    -- Search for the pattern
+    local search_pattern = "MARK:" .. query
+    
+    -- Save current cursor position
+    local cursor_pos = vim.api.nvim_win_get_cursor(0)
+    
+    -- Try to find the mark from the beginning of the file
+    vim.api.nvim_win_set_cursor(0, {1, 0})
+    
+    -- Use vim's search function
+    local found = vim.fn.search(vim.fn.escape(search_pattern, '/\\'), 'W')
+    
+    if found > 0 then
+      vim.notify("Jumped to MARK: " .. query, vim.log.levels.INFO)
+    else
+      -- Restore cursor position if not found
+      vim.api.nvim_win_set_cursor(0, cursor_pos)
+      vim.notify("MARK not found: '" .. query .. "'", vim.log.levels.ERROR)
+    end
+  end,
+  {
+    nargs = 1, -- Requires exactly one argument
+  }
+)
 
 -- commands
 vim.api.nvim_create_user_command("ReHook", function()
