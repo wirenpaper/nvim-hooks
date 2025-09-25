@@ -1010,6 +1010,10 @@ vim.keymap.set("n", "fz", function()
   normal()
 end)
 
+function set_false_bookmarks_flag()
+  bookmarks_flag = false
+end
+
 function normal()
   bookmarks_flag = false
   local f_file = io.open(workspace .. "/__f__", "r")
@@ -1130,6 +1134,7 @@ signs(0, 0)
 kill_flag_set(false)
 
 M = {
+  set_false_bookmarks_flag = set_false_bookmarks_flag,
   rehook = rehook,
   path = path,
   on_buffer_enter = on_buffer_enter,
