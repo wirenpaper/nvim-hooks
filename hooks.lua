@@ -782,6 +782,12 @@ vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 global_n = nil
 
 local function hook(n)
+  if bookmarks_flag == true then
+    local cmd_str = string.format("GotoMark %s", marks[n])
+    vim.cmd(cmd_str)
+    return
+  end
+
   if vim.fn.filereadable(hooks) == 0 then
     print("hooks file doesn't exist or isn't readble")
     return
@@ -994,19 +1000,59 @@ end)
 vim.keymap.set("n", "fd", function()
   hook_file()
 end)
-vim.keymap.set("n", "fi", function()
-  if vim.wo.signcolumn == "yes" then
-    vim.wo.signcolumn = "no"
-  else
-    vim.wo.signcolumn = "yes"
-  end
-end) --, { desc = "Toggle Sign Column" })
 vim.keymap.set("n", "fn", function()
   pfname()
 end, {})
+vim.keymap.set("n", "fb", function()
+  bookmarks()
+end)
+vim.keymap.set("n", "fz", function()
+  normal()
+end)
 
-local function tmux_warning()
-  print("tmux is off")
+function normal()
+  bookmarks_flag = false
+  local f_file = io.open(workspace .. "/__f__", "r")
+  if f_file then
+    file_contents = f_file:read("*l")  -- Read the line BEFORE closing
+    f_file:close()                     -- Close AFTER reading
+  else
+    print("Failed to open __f__ file for reading")
+  end
+  hookfiles(file_contents, true)
+end
+
+bookmarks_flag = false
+marks = nil
+function bookmarks()
+  bookmarks_flag = true
+  marks = {}
+
+  -- Get lines from current buffer only
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  
+  -- MARK:bookmarks
+  vim.o.tabline = ""
+  local count = 1
+  for _, line in ipairs(lines) do
+    local mark_name = line:match("MARK:(%S+)")
+    if mark_name then
+      table.insert(marks, mark_name)
+      vim.o.tabline = vim.o.tabline .. " " .. '%#TabKeyStyled#' .. key_map(count) .. '%*' .. " " .. mark_name
+
+      if count == 8 then
+	break
+      end
+      count = count + 1
+    end
+  end
+  
+  -- Print the marks
+  if #marks == 0 then
+    vim.notify("No MARK: comments found in current file", vim.log.levels.INFO)
+  end
+
+  return marks
 end
 
 function search_current_line()
