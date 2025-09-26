@@ -203,18 +203,18 @@ local function fname_set_cleaned(file)
   end
 end
 
-local function is_tmux_running()
-  local tmux_check_command = "tmux list-sessions"
-  local status = os.execute(tmux_check_command)
+--local function is_tmux_running()
+ -- local tmux_check_command = "tmux list-sessions"
+  --local status = os.execute(tmux_check_command)
 
-  if status == 0 then
+  --if status == 0 then
     -- tmux is running
-    return true
-  else
+   -- return true
+  --else
     -- tmux is not running
-    return false
-  end
-end
+    --return false
+  --end
+--end
 
 local function fname()
   return fname_aux()[1]
@@ -278,9 +278,9 @@ end
 
 function tmux_protocol2(opts)
   gropts = opts
-  if nvim_exit_flag == true then
-    return
-  end
+  --if nvim_exit_flag == true then
+  --  return
+  --end
 
   if not string.match(get_end_path_name(hooks), "__workspaces__") then
     ws = get_end_path_name(hooks)
@@ -336,9 +336,9 @@ end
 
 function tmux_protocol(opts)
   gropts = opts
-  if nvim_exit_flag == true then
-    return
-  end
+  --if nvim_exit_flag == true then
+  --  return
+  --end
 
   if not string.match(get_end_path_name(hooks), "__workspaces__") then
     ws = get_end_path_name(hooks)
@@ -934,20 +934,20 @@ local function on_buffer_enter()
   end
 end
 
-nvim_exit_flag = false
-local function on_neovim_exit()
-  local function_name = "update_tmux_status_line"
-  local line_number = 0
-  local command = "python3 /home/saifr/scripts/tmux.py "
-    .. function_name
-    .. " "
-    .. line_number
-    .. " '"
-    .. "#[fg=red]NVIM EXITED"
-    .. "'"
-  os.execute(command)
-  nvim_exit_flag = true
-end
+--nvim_exit_flag = false
+--local function on_neovim_exit()
+ -- local function_name = "update_tmux_status_line"
+  --local line_number = 0
+  --local command = "python3 /home/saifr/scripts/tmux.py "
+  --  .. function_name
+  --  .. " "
+  --  .. line_number
+  --  .. " '"
+  --  .. "#[fg=red]NVIM EXITED"
+  --  .. "'"
+  --os.execute(command)
+  --nvim_exit_flag = true
+--end
 
 local function on_buf_save()
   if is_modified() == true then
@@ -960,7 +960,7 @@ end
 function register_autocommands()
   vim.api.nvim_create_autocmd("BufEnter", { pattern = "*", callback = on_buffer_enter })
   vim.api.nvim_create_autocmd("TermOpen", { pattern = "*", callback = on_buffer_enter2 })
-  vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
+  --vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
 end
 
@@ -1009,6 +1009,9 @@ end)
 vim.keymap.set("n", "fz", function()
   normal()
 end)
+vim.keymap.set("n", "fg", function()
+  global()
+end)
 
 function set_false_bookmarks_flag()
   bookmarks_flag = false
@@ -1024,6 +1027,11 @@ function normal()
     print("Failed to open __f__ file for reading")
   end
   hookfiles(file_contents, true)
+end
+
+function global()
+  bookmarks_flag = false
+  rehook(get_buffer_path() .. "/.hook_files/" .. "__global__", true)
 end
 
 bookmarks_flag = false
