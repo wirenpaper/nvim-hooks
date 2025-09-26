@@ -94,6 +94,7 @@ function get_after_space(str)
   end
 end
 
+jmp_path = path
 local function get_buffer_path()
   local path = vim.api.nvim_buf_get_name(0)
   if vim.fn.isdirectory(path) ~= 0 then
@@ -967,49 +968,49 @@ end
 -- MARK:bang
 
 -- key bindings
-vim.keymap.set("n", "fj", function()
+vim.keymap.set("n", ",jj", function()
   hook(1)
 end)
-vim.keymap.set("n", "fk", function()
+vim.keymap.set("n", ",jk", function()
   hook(2)
 end)
-vim.keymap.set("n", "fl", function()
+vim.keymap.set("n", ",jl", function()
   hook(3)
 end)
-vim.keymap.set("n", "f;", function()
+vim.keymap.set("n", ",j;", function()
   hook(4)
 end)
-vim.keymap.set("n", "fm", function()
+vim.keymap.set("n", ",jm", function()
   hook(5)
 end)
-vim.keymap.set("n", "f,", function()
+vim.keymap.set("n", ",j,", function()
   hook(6)
 end)
-vim.keymap.set("n", "f.", function()
+vim.keymap.set("n", ",j.", function()
   hook(7)
 end)
-vim.keymap.set("n", "f/", function()
+vim.keymap.set("n", ",j/", function()
   hook(8)
 end)
-vim.keymap.set("n", "fs", function()
+vim.keymap.set("n", ",js", function()
   hook_term()
 end)
-vim.keymap.set("n", "fa", function()
+vim.keymap.set("n", ",ja", function()
   copy_filename()
 end)
-vim.keymap.set("n", "fd", function()
+vim.keymap.set("n", ",jd", function()
   hook_file()
 end)
-vim.keymap.set("n", "fn", function()
+vim.keymap.set("n", ",jn", function()
   pfname()
 end, {})
-vim.keymap.set("n", "fb", function()
+vim.keymap.set("n", ",jb", function()
   bookmarks()
 end)
-vim.keymap.set("n", "fz", function()
+vim.keymap.set("n", ",jz", function()
   normal()
 end)
-vim.keymap.set("n", "fg", function()
+vim.keymap.set("n", ",jg", function()
   global()
 end)
 
@@ -1031,7 +1032,7 @@ end
 
 function global()
   bookmarks_flag = false
-  rehook(get_buffer_path() .. "/.hook_files/" .. "__global__", true)
+  rehook(jmp_path .. "__global__", true)
 end
 
 bookmarks_flag = false

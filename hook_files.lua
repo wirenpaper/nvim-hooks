@@ -533,7 +533,7 @@ vim.api.nvim_create_user_command("Weed", function()
   end
 end, {})
 
-vim.keymap.set("n", "fe", function()
+vim.keymap.set("n", ",jw", function()
   hooks.set_false_bookmarks_flag()
   local workspaces_file = hooks.path .. "/.hook_files/__workspaces__"
 
