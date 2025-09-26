@@ -204,19 +204,6 @@ local function fname_set_cleaned(file)
   end
 end
 
---local function is_tmux_running()
- -- local tmux_check_command = "tmux list-sessions"
-  --local status = os.execute(tmux_check_command)
-
-  --if status == 0 then
-    -- tmux is running
-   -- return true
-  --else
-    -- tmux is not running
-    --return false
-  --end
---end
-
 local function fname()
   return fname_aux()[1]
 end
@@ -279,9 +266,6 @@ end
 
 function tmux_protocol2(opts)
   gropts = opts
-  --if nvim_exit_flag == true then
-  --  return
-  --end
 
   if not string.match(get_end_path_name(hooks), "__workspaces__") then
     ws = get_end_path_name(hooks)
@@ -337,9 +321,6 @@ end
 
 function tmux_protocol(opts)
   gropts = opts
-  --if nvim_exit_flag == true then
-  --  return
-  --end
 
   if not string.match(get_end_path_name(hooks), "__workspaces__") then
     ws = get_end_path_name(hooks)
@@ -935,21 +916,6 @@ local function on_buffer_enter()
   end
 end
 
---nvim_exit_flag = false
---local function on_neovim_exit()
- -- local function_name = "update_tmux_status_line"
-  --local line_number = 0
-  --local command = "python3 /home/saifr/scripts/tmux.py "
-  --  .. function_name
-  --  .. " "
-  --  .. line_number
-  --  .. " '"
-  --  .. "#[fg=red]NVIM EXITED"
-  --  .. "'"
-  --os.execute(command)
-  --nvim_exit_flag = true
---end
-
 local function on_buf_save()
   if is_modified() == true then
     mod_flag = true
@@ -968,49 +934,49 @@ end
 -- MARK:bang
 
 -- key bindings
-vim.keymap.set("n", ",jj", function()
+vim.keymap.set("n", ",aj", function()
   hook(1)
 end)
-vim.keymap.set("n", ",jk", function()
+vim.keymap.set("n", ",ak", function()
   hook(2)
 end)
-vim.keymap.set("n", ",jl", function()
+vim.keymap.set("n", ",al", function()
   hook(3)
 end)
-vim.keymap.set("n", ",j;", function()
+vim.keymap.set("n", ",a;", function()
   hook(4)
 end)
-vim.keymap.set("n", ",jm", function()
+vim.keymap.set("n", ",am", function()
   hook(5)
 end)
-vim.keymap.set("n", ",j,", function()
+vim.keymap.set("n", ",a,", function()
   hook(6)
 end)
-vim.keymap.set("n", ",j.", function()
+vim.keymap.set("n", ",a.", function()
   hook(7)
 end)
-vim.keymap.set("n", ",j/", function()
+vim.keymap.set("n", ",a/", function()
   hook(8)
 end)
-vim.keymap.set("n", ",js", function()
+vim.keymap.set("n", ",as", function()
   hook_term()
 end)
-vim.keymap.set("n", ",ja", function()
+vim.keymap.set("n", ",aa", function()
   copy_filename()
 end)
-vim.keymap.set("n", ",jd", function()
+vim.keymap.set("n", ",ad", function()
   hook_file()
 end)
-vim.keymap.set("n", ",jn", function()
+vim.keymap.set("n", ",an", function()
   pfname()
 end, {})
-vim.keymap.set("n", ",jb", function()
+vim.keymap.set("n", ",ab", function()
   bookmarks()
 end)
-vim.keymap.set("n", ",jz", function()
+vim.keymap.set("n", ",az", function()
   normal()
 end)
-vim.keymap.set("n", ",jg", function()
+vim.keymap.set("n", ",ag", function()
   global()
 end)
 
