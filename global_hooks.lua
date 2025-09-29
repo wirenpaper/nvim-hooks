@@ -9,21 +9,13 @@ meta_names = {}
 
 function key_map(n)
   if n == 1 then
-    return "j"
+    return "u"
   elseif n == 2 then
-    return "k"
+    return "i"
   elseif n == 3 then
-    return "l"
+    return "o"
   elseif n == 4 then
-    return ";"
-  elseif n == 5 then
-    return "m"
-  elseif n == 6 then
-    return ","
-  elseif n == 7 then
-    return "."
-  elseif n == 8 then
-    return "/"
+    return "p"
   end
 end
 
@@ -757,8 +749,6 @@ local function hook_mode1(n)
   end
 end
 
--- MARK:solid
-
 vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
 
 global_n = nil
@@ -854,8 +844,6 @@ local function copy_filename()
   vim.api.nvim_call_function("setreg", { "+", file })
 end
 
--- MARK:dang
-
 function term_buffer_directory_onchange()
   term_dict[fname()] = vim.fn.getcwd()
 end
@@ -931,32 +919,19 @@ function register_autocommands()
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
 end
 
--- MARK:bang
-
+-- MARK:bindings
 -- key bindings
-vim.keymap.set("n", ",aj", function()
+vim.keymap.set("n", ",au", function()
   hook(1)
 end)
-vim.keymap.set("n", ",ak", function()
+vim.keymap.set("n", ",ai", function()
   hook(2)
 end)
-vim.keymap.set("n", ",al", function()
+vim.keymap.set("n", ",ao", function()
   hook(3)
 end)
-vim.keymap.set("n", ",a;", function()
+vim.keymap.set("n", ",ap", function()
   hook(4)
-end)
-vim.keymap.set("n", ",am", function()
-  hook(5)
-end)
-vim.keymap.set("n", ",a,", function()
-  hook(6)
-end)
-vim.keymap.set("n", ",a.", function()
-  hook(7)
-end)
-vim.keymap.set("n", ",a/", function()
-  hook(8)
 end)
 vim.keymap.set("n", ",as", function()
   hook_term()
