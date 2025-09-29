@@ -1,6 +1,6 @@
 package.path = package.path .. ";/home/saifr/.config/nvim/plugin/hooks/?.lua"
+local hooks = require("hooks")
 local utils = require("utilities")
-
 local M = {}
 
 gterm_dict = {}
@@ -753,6 +753,9 @@ vim.cmd([[autocmd InsertEnter ghooks call PlaceSigns(-1,-1)]])
 global_n = nil
 
 local function hook(n)
+  hooks.set_false_bookmarks_flag()
+  hooks.normal()
+
   if bookmarks_flag == true then
     local cmd_str = string.format("GotoMark %s", marks[n])
     vim.cmd(cmd_str)

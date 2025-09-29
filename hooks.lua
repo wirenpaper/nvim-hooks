@@ -605,8 +605,10 @@ local function hook_file()
   ERROR_LINE = 0
 end
 
+-- MARK:global_hook_file
 local function global_hook_file()
   vim.cmd("silent on")
+  set_false_bookmarks_flag()
   local path, args = format_path(current_buffer)
   
   -- Use hardcoded global hooks file
@@ -1134,8 +1136,14 @@ register_autocommands()
 signs(0, 0)
 kill_flag_set(false)
 
+local function is_bookmarks_flag()
+  return bookmarks_flag
+end
+
 M = {
   set_false_bookmarks_flag = set_false_bookmarks_flag,
+  is_bookmarks_flag,
+  normal = normal,
   rehook = rehook,
   path = path,
   on_buffer_enter = on_buffer_enter,
