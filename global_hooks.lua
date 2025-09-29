@@ -7,7 +7,7 @@ term_dict = {}
 bufname = {}
 meta_names = {}
 
-function key_map(n)
+local function key_map(n)
   if n == 1 then
     return "u"
   elseif n == 2 then
@@ -19,7 +19,7 @@ function key_map(n)
   end
 end
 
-function file_exists(path)
+local function file_exists(path)
   if path ~= nil then
     local f = io.open(path, "r")
     if f ~= nil then
@@ -54,7 +54,7 @@ local function format_path(str)
   end
 end
 
-function remove_slash(s)
+local function remove_slash(s)
   -- Check if the last character is a "/"
   if string.sub(s, -1) == "/" then
     -- Remove the last character
@@ -64,7 +64,7 @@ function remove_slash(s)
   return s
 end
 
-function get_end_path_name(s)
+local function get_end_path_name(s)
   -- If 's' is not a string or is nil, return an empty string immediately.
   if type(s) ~= "string" then
     return ""
@@ -77,7 +77,7 @@ function get_end_path_name(s)
   return t
 end
 
-function get_after_space(str)
+local function get_after_space(str)
   local i = string.find(str, " ") -- find the first space
   if i then -- if there is a space
     return string.sub(str, i + 1) -- return the substring after the space
@@ -139,7 +139,7 @@ local function fname_aux_set(file)
   return file
 end
 
-function has_multiple_slashes_in_row(s)
+local function has_multiple_slashes_in_row(s)
   local i = 1
   for c in s:gmatch(".") do
     if i ~= #s and string.sub(s, i, i) == "/" and string.sub(s, i + 1, i + 1) == "/" then
@@ -225,7 +225,7 @@ gropts = ""
 ---Polls for a value and executes a callback when it's available.
 ---@param producer_func function: A function that returns the value you're waiting for. Should return nil if not ready.
 ---@param on_success_callback function: The function to run with the value once it's no longer nil.
-function poll_for_value(producer_func, on_success_callback)
+local function poll_for_value(producer_func, on_success_callback)
   local timer = vim.loop.new_timer()
   local attempts = 0
   local max_attempts = 40 -- Give up after 2 seconds (40 * 50ms)
@@ -257,7 +257,7 @@ function poll_for_value(producer_func, on_success_callback)
   )
 end
 
-function statusline_protocol2(opts)
+local function statusline_protocol2(opts)
   gropts = opts
 
   if not string.match(get_end_path_name(ghooks), "__workspaces__") then
@@ -312,7 +312,7 @@ function statusline_protocol2(opts)
   end
 end
 
-function statusline_protocol(opts)
+local function statusline_protocol(opts)
   gropts = opts
 
   if not string.match(get_end_path_name(ghooks), "__workspaces__") then
@@ -422,7 +422,7 @@ local function rehook_helper(path, skip_terminal_kill)
   end
 end
 
-function rehook(path, skip_terminal_kill)
+local function rehook(path, skip_terminal_kill)
   if is_modified() == false then
     rehook_helper(path, skip_terminal_kill)
   else
@@ -437,14 +437,14 @@ end
 ERROR_LINE = 0
 kill_flag = false
 
-function is_file(path)
+local function is_file(path)
   local stat = vim.loop.fs_stat(path)
   return stat and stat.type == "file"
 end
 
 file_line_number = {}
 local dups = {}
-function lines_from(file)
+local function lines_from(file)
   dups = {}
   file_line_number = {}
   if not file_exists(file) then
@@ -843,7 +843,7 @@ local function copy_filename()
   vim.api.nvim_call_function("setreg", { "+", file })
 end
 
-function term_buffer_directory_onchange()
+local function term_buffer_directory_onchange()
   term_dict[fname()] = vim.fn.getcwd()
 end
 
@@ -911,7 +911,7 @@ local function on_buf_save()
   end
 end
 
-function register_autocommands()
+local function register_autocommands()
   vim.api.nvim_create_autocmd("BufEnter", { pattern = "*", callback = on_buffer_enter })
   vim.api.nvim_create_autocmd("TermOpen", { pattern = "*", callback = on_buffer_enter2 })
   --vim.api.nvim_create_autocmd("VimLeave", { callback = on_neovim_exit })
@@ -954,61 +954,11 @@ vim.keymap.set("n", ",ag", function()
   global()
 end)
 
-function set_false_bookmarks_flag()
+local function set_false_bookmarks_flag()
   bookmarks_flag = false
 end
 
-function normal()
-  bookmarks_flag = false
-  local f_file = io.open(workspace .. "/__f__", "r")
-  if f_file then
-    file_contents = f_file:read("*l")  -- Read the line BEFORE closing
-    f_file:close()                     -- Close AFTER reading
-  else
-    print("Failed to open __f__ file for reading")
-  end
-  hookfiles(file_contents, true)
-end
-
-function global()
-  bookmarks_flag = false
-  rehook(jmp_path .. "__global__", true)
-end
-
-bookmarks_flag = false
-marks = nil
-function bookmarks()
-  bookmarks_flag = true
-  marks = {}
-
-  -- Get lines from current buffer only
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  
-  -- MARK:bookmarks
-  vim.o.tabline = ""
-  local count = 1
-  for _, line in ipairs(lines) do
-    local mark_name = line:match("MARK:(%S+)")
-    if mark_name then
-      table.insert(marks, mark_name)
-      vim.o.tabline = vim.o.tabline .. " " .. '%#TabKeyStyled#' .. key_map(count) .. '%*' .. " " .. mark_name
-
-      if count == 8 then
-	break
-      end
-      count = count + 1
-    end
-  end
-  
-  -- Print the marks
-  if #marks == 0 then
-    vim.notify("No MARK: comments found in current file", vim.log.levels.INFO)
-  end
-
-  return marks
-end
-
-function search_current_line()
+local function search_current_line()
   --Yank the current line
   vim.api.nvim_command("normal! yy")
 
@@ -1074,7 +1024,7 @@ vim.api.nvim_create_user_command("Warn", function()
   tmux_warning()
 end, {})
 
-function kill_flag_set(bool_val)
+local function kill_flag_set(bool_val)
   kill_flag = bool_val
 end
 
