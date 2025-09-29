@@ -605,6 +605,32 @@ local function hook_file()
   ERROR_LINE = 0
 end
 
+local function global_hook_file()
+  vim.cmd("silent on")
+  local path, args = format_path(current_buffer)
+  
+  -- Use hardcoded global hooks file
+  local global_hooks = jmp_path .. "__global__"
+  
+  if vim.fn.isdirectory(path) == 0 then
+    local n = file_line_number[vim.api.nvim_buf_get_name(0)]
+    if n ~= nil then
+      if ERROR_LINE ~= 0 then
+        signs(n_shad, ERROR_LINE)
+      else
+        signs(n, ERROR_LINE)
+        n_shad = n
+      end
+    else
+      signs(n_shad, ERROR_LINE)
+    end
+  end
+  
+  vim.cmd("e " .. global_hooks)
+  bufname[vim.api.nvim_get_current_buf()] = { global_hooks, "global_hooks" }
+  ERROR_LINE = 0
+end
+
 local function hook_term()
   vim.cmd("on")
   hook_file()
@@ -977,7 +1003,7 @@ vim.keymap.set("n", ",az", function()
   normal()
 end)
 vim.keymap.set("n", ",ag", function()
-  global()
+  global_hook_file()
 end)
 
 function set_false_bookmarks_flag()
