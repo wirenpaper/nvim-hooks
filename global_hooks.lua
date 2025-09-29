@@ -3,9 +3,9 @@ local utils = require("utilities")
 
 local M = {}
 
-term_dict = {}
-bufname = {}
-meta_names = {}
+gterm_dict = {}
+gbufname = {}
+gmeta_names = {}
 
 local function key_map(n)
   if n == 1 then
@@ -116,7 +116,7 @@ end
 
 vim.o.showtabline = 2
 local function fname_aux()
-  local file = bufname[vim.api.nvim_get_current_buf()]
+  local file = gbufname[vim.api.nvim_get_current_buf()]
   if file == nil then
     if vim.api.nvim_buf_get_name(0) == ghooks then
       file = { vim.api.nvim_buf_get_name(0), "hooks" }
@@ -250,7 +250,7 @@ local function poll_for_value(producer_func, on_success_callback)
         if attempts > max_attempts then
           is_closing = true -- <<< Set the flag first
           timer:close()
-          -- vim.notify("Error: Timed out waiting for file_line_number.", vim.log.levels.ERROR)
+          -- vim.notify("Error: Timed out waiting for gfile_line_number.", vim.log.levels.ERROR)
         end
       end
     end)
@@ -295,19 +295,19 @@ local function statusline_protocol2(opts)
 
   -- This block now determines HOW to get the line number 'n', and then passes
   -- it to the function above for processing.
-  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+  if file_exists(fname()) == false or gterm_dict[fname()] ~= nil then
     -- ASYNC CASE: The value is not ready yet.
     -- We poll for the value, and once we have it, we run our logic.
     poll_for_value(
       function()
-        return file_line_number[fname()]
+        return gfile_line_number[fname()]
       end,
       build_and_execute_tmux_command -- The function to run on success
     )
   else
     -- SYNC CASE: The value is ready immediately.
     -- We get it directly and run our logic right away.
-    local n = file_line_number[meta_names[fname()]]
+    local n = gfile_line_number[gmeta_names[fname()]]
     build_and_execute_tmux_command(n)
   end
 end
@@ -323,10 +323,10 @@ local function statusline_protocol(opts)
   local km = key_map(n)
   local n = 0
 
-  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
-    n = file_line_number[fname()]
+  if file_exists(fname()) == false or gterm_dict[fname()] ~= nil then
+    n = gfile_line_number[fname()]
   else
-    n = file_line_number[meta_names[fname()]]
+    n = gfile_line_number[gmeta_names[fname()]]
   end
 
   if type(opts) == "table" then
@@ -356,7 +356,7 @@ end
 
 local function pfname_aux()
   file = nil
-  local mbufname = bufname[vim.api.nvim_get_current_buf()]
+  local mbufname = gbufname[vim.api.nvim_get_current_buf()]
   if mbufname ~= nil then
     local name = mbufname[1]
     if name ~= nil then
@@ -442,11 +442,11 @@ local function is_file(path)
   return stat and stat.type == "file"
 end
 
-file_line_number = {}
-local dups = {}
+gfile_line_number = {}
+local gdups = {}
 local function lines_from(file)
-  dups = {}
-  file_line_number = {}
+  gdups = {}
+  gfile_line_number = {}
   if not file_exists(file) then
     return {}
   end
@@ -460,27 +460,27 @@ local function lines_from(file)
       tmp_line = format_path(line)
     end
     if tmp_line == "" then
-      if dups[line] ~= nil and dups[line] ~= "" then
+      if gdups[line] ~= nil and gdups[line] ~= "" then
         print("DUPLICATE hooks:" .. #lines + 1)
         ERROR_LINE = #lines + 1
         kill_flag = true
         return
       else
-        dups[line] = line
+        gdups[line] = line
       end
     else
-      if dups[tmp_line] ~= nil and dups[tmp_line] ~= "" then
+      if gdups[tmp_line] ~= nil and gdups[tmp_line] ~= "" then
         print("DUPLICATE hooks:" .. #lines + 1)
         ERROR_LINE = #lines + 1
         kill_flag = true
         return
       else
-        dups[tmp_line] = tmp_line
-        meta_names[format_path(line)] = line
+        gdups[tmp_line] = tmp_line
+        gmeta_names[format_path(line)] = line
       end
     end
     lines[#lines + 1] = line
-    file_line_number[line] = #lines
+    gfile_line_number[line] = #lines
   end
   return lines
 end
@@ -568,7 +568,7 @@ local function setup_hook_files()
   end
 end
 
-n_shad = file_line_number[vim.api.nvim_buf_get_name(0)]
+n_shad = gfile_line_number[vim.api.nvim_buf_get_name(0)]
 local function hook_file()
   vim.cmd("silent on")
   local path, args = format_path(current_buffer)
@@ -578,7 +578,7 @@ local function hook_file()
   end
 
   if vim.fn.isdirectory(path) == 0 then
-    local n = file_line_number[vim.api.nvim_buf_get_name(0)]
+    local n = gfile_line_number[vim.api.nvim_buf_get_name(0)]
     if n ~= nil then
       if ERROR_LINE ~= 0 then
         signs(n_shad, ERROR_LINE)
@@ -592,7 +592,7 @@ local function hook_file()
   end
 
   vim.cmd("e " .. ghooks)
-  bufname[vim.api.nvim_get_current_buf()] = { ghooks, "hooks" }
+  gbufname[vim.api.nvim_get_current_buf()] = { ghooks, "hooks" }
   ERROR_LINE = 0
 end
 
@@ -621,33 +621,33 @@ local function write_hooks(n, tpath)
 end
 
 local function term_retag(params)
-  local n = file_line_number[current_buffer]
+  local n = gfile_line_number[current_buffer]
   local tag = params.args
-  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+  if file_exists(fname()) == false or gterm_dict[fname()] ~= nil then
     if tag == "" then
       if path ~= fname() then
-        if dups[path] ~= nil then
+        if gdups[path] ~= nil then
           print("RETAG DENIED -- DUPLICATE")
           return
         end
         buffers[path] = vim.api.nvim_get_current_buf()
-        bufname[vim.api.nvim_get_current_buf()] = { path, "term" }
-        term_dict[path] = path
-        term_bufnum[path] = vim.api.nvim_get_current_buf()
+        gbufname[vim.api.nvim_get_current_buf()] = { path, "term" }
+        gterm_dict[path] = path
+        gterm_bufnum[path] = vim.api.nvim_get_current_buf()
         write_hooks(n, path)
       elseif path == fname() then
         print("RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH")
       end
     else
       if path .. " " .. tag ~= fname() then
-        if dups[path .. " " .. tag] ~= nil then
+        if gdups[path .. " " .. tag] ~= nil then
           print("RETAG DENIED -- DUPLICATE")
           return
         end
         buffers[path .. " " .. tag] = vim.api.nvim_get_current_buf()
-        bufname[vim.api.nvim_get_current_buf()] = { path .. " " .. tag, "term" }
-        term_dict[path .. " " .. tag] = path
-        term_bufnum[path .. " " .. tag] = vim.api.nvim_get_current_buf()
+        gbufname[vim.api.nvim_get_current_buf()] = { path .. " " .. tag, "term" }
+        gterm_dict[path .. " " .. tag] = path
+        gterm_bufnum[path .. " " .. tag] = vim.api.nvim_get_current_buf()
         write_hooks(n, path .. " " .. tag)
       elseif path .. " " .. tag == fname() then
         print("RETAG DENIED -- BUFFER ALREADY NAMED AS SUCH")
@@ -661,22 +661,22 @@ vim.api.nvim_create_user_command("TermRetag", function(params)
   term_retag(params)
 end, { nargs = "*" })
 
-term_bufnum = {}
+gterm_bufnum = {}
 local function set_dir_mode2(path, args)
   vim.cmd("te cd " .. path .. " && $SHELL")
   buffers[path .. " " .. args] = vim.api.nvim_get_current_buf()
-  bufname[vim.api.nvim_get_current_buf()] = { path .. " " .. args, "term" }
-  term_dict[fname()] = path
-  term_bufnum[fname()] = vim.api.nvim_get_current_buf()
+  gbufname[vim.api.nvim_get_current_buf()] = { path .. " " .. args, "term" }
+  gterm_dict[fname()] = path
+  gterm_bufnum[fname()] = vim.api.nvim_get_current_buf()
   vim.api.nvim_set_current_dir(path)
 end
 
 local function set_dir_mode1(path)
   vim.cmd("te cd " .. path .. " && $SHELL")
   buffers[path] = vim.api.nvim_get_current_buf()
-  bufname[vim.api.nvim_get_current_buf()] = { path, "term" }
-  term_dict[fname()] = path
-  term_bufnum[fname()] = vim.api.nvim_get_current_buf()
+  gbufname[vim.api.nvim_get_current_buf()] = { path, "term" }
+  gterm_dict[fname()] = path
+  gterm_bufnum[fname()] = vim.api.nvim_get_current_buf()
   vim.api.nvim_set_current_dir(path)
 end
 
@@ -701,7 +701,7 @@ local function hook_mode2(n, args)
     if buffers[path] == nil then
       vim.cmd("e " .. path)
       buffers[path] = vim.api.nvim_get_current_buf()
-      bufname[vim.api.nvim_get_current_buf()] = { path, "file" }
+      gbufname[vim.api.nvim_get_current_buf()] = { path, "file" }
     else
       vim.api.nvim_set_current_buf(buffers[path])
     end
@@ -738,7 +738,7 @@ local function hook_mode1(n)
     if buffers[path] == nil then
       vim.cmd("e " .. path)
       buffers[path] = vim.api.nvim_get_current_buf()
-      bufname[vim.api.nvim_get_current_buf()] = { path, "file" }
+      gbufname[vim.api.nvim_get_current_buf()] = { path, "file" }
     else
       vim.api.nvim_set_current_buf(buffers[path])
     end
@@ -844,11 +844,11 @@ local function copy_filename()
 end
 
 local function term_buffer_directory_onchange()
-  term_dict[fname()] = vim.fn.getcwd()
+  gterm_dict[fname()] = vim.fn.getcwd()
 end
 
 local function on_buffer_enter2()
-  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+  if file_exists(fname()) == false or gterm_dict[fname()] ~= nil then
     if is_modified() then
       mod_flag = true
     end
@@ -859,24 +859,24 @@ local function on_buffer_enter2()
   local opts = lines_from(ghooks)
   statusline_protocol2(opts)
 
-  if term_dict[fname()] ~= nil then
-    local path, _ = format_path(term_dict[fname()])
+  if gterm_dict[fname()] ~= nil then
+    local path, _ = format_path(gterm_dict[fname()])
     vim.api.nvim_set_current_dir(path)
   end
 
   if hooks_fired == true then
     if should_kill_terminals then
-      for key, value in pairs(term_bufnum) do
+      for key, value in pairs(gterm_bufnum) do
         vim.cmd([[bd! ]] .. value)
       end
-      term_bufnum = {}
+      gterm_bufnum = {}
     end
     hooks_fired = false
   end
 end
 
 local function on_buffer_enter()
-  if file_exists(fname()) == false or term_dict[fname()] ~= nil then
+  if file_exists(fname()) == false or gterm_dict[fname()] ~= nil then
     if is_modified() then
       mod_flag = true
     end
@@ -887,17 +887,17 @@ local function on_buffer_enter()
   local opts = lines_from(ghooks)
   statusline_protocol(opts)
 
-  if term_dict[fname()] ~= nil then
-    local path, _ = format_path(term_dict[fname()])
+  if gterm_dict[fname()] ~= nil then
+    local path, _ = format_path(gterm_dict[fname()])
     vim.api.nvim_set_current_dir(path)
   end
 
   if hooks_fired == true then
     if should_kill_terminals then
-      for key, value in pairs(term_bufnum) do
+      for key, value in pairs(gterm_bufnum) do
         vim.cmd([[bd! ]] .. value)
       end
-      term_bufnum = {}
+      gterm_bufnum = {}
     end
     hooks_fired = false
   end
