@@ -108,11 +108,7 @@ end
 workspace = path .. "/.hook_files"
 
 ws = nil
-ghooks = nil
---MARK:hooks
-if path_exists(path .. "/.hook_files") then
-  ghooks = path .. "/.hook_files/__global__" 
-end
+ghooks = path .. "/.hook_files/__global__" 
 
 vim.o.showtabline = 2
 local function fname_aux()
