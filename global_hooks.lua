@@ -108,16 +108,17 @@ end
 workspace = path .. "/.hook_files"
 
 ws = nil
-hooks = nil
+ghooks = nil
+--MARK:hooks
 if path_exists(path .. "/.hook_files") then
-  hooks = path .. "/.hook_files/" .. utils.file_content(path .. "/.hook_files/__f__")
+  ghooks = path .. "/.hook_files/__global__" 
 end
 
 vim.o.showtabline = 2
 local function fname_aux()
   local file = bufname[vim.api.nvim_get_current_buf()]
   if file == nil then
-    if vim.api.nvim_buf_get_name(0) == hooks then
+    if vim.api.nvim_buf_get_name(0) == ghooks then
       file = { vim.api.nvim_buf_get_name(0), "hooks" }
     else
       file = { vim.api.nvim_buf_get_name(0), "file" }
@@ -129,7 +130,7 @@ end
 local function fname_aux_set(file)
   if vim.fn.isdirectory(file) ~= 0 then
     file = { file, "term" }
-  elseif file == hooks then
+  elseif file == ghooks then
     file = { file, "hooks" }
     print("file: " .. file)
   else
@@ -168,11 +169,11 @@ local function fname_cleaned()
     end
     local last = get_after_space(fname_aux()[1])
     if last == "" then
-      local opts = lines_from(hooks)
+      local opts = lines_from(ghooks)
       statusline_protocol(opts)
       return vim.fn.getcwd()
     else
-      local opts = lines_from(hooks)
+      local opts = lines_from(ghooks)
       statusline_protocol(opts)
       return vim.fn.getcwd()
     end
@@ -215,7 +216,7 @@ vim.api.nvim_create_autocmd({ "VimEnter", "ColorScheme" }, {
     if color == "darkness" then
       cmode = "dark"
     end
-    statusline_protocol(gropts)
+    --statusline_protocol(gropts)
   end,
 })
 
@@ -259,8 +260,8 @@ end
 function statusline_protocol2(opts)
   gropts = opts
 
-  if not string.match(get_end_path_name(hooks), "__workspaces__") then
-    ws = get_end_path_name(hooks)
+  if not string.match(get_end_path_name(ghooks), "__workspaces__") then
+    ws = get_end_path_name(ghooks)
   end
 
   local function build_and_execute_tmux_command(n)
@@ -273,7 +274,7 @@ function statusline_protocol2(opts)
           break
         end
         if v ~= "" and key_map(n) ~= key_map(i) then
-          if not string.match(get_end_path_name(hooks), "__workspaces__") then
+          if not string.match(get_end_path_name(ghooks), "__workspaces__") then
 	    tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
           else
             local s = get_end_path_name(v)
@@ -314,8 +315,8 @@ end
 function statusline_protocol(opts)
   gropts = opts
 
-  if not string.match(get_end_path_name(hooks), "__workspaces__") then
-    ws = get_end_path_name(hooks)
+  if not string.match(get_end_path_name(ghooks), "__workspaces__") then
+    ws = get_end_path_name(ghooks)
   end
 
   local tmux_string = ""
@@ -334,7 +335,7 @@ function statusline_protocol(opts)
         break
       end
       if v ~= "" and key_map(n) ~= key_map(i) then
-        if not string.match(get_end_path_name(hooks), "__workspaces__") then
+        if not string.match(get_end_path_name(ghooks), "__workspaces__") then
 	  tmux_string = tmux_string .. '%#TabKeyStyled#' .. key_map(i) .. '%*' .. fname_set_cleaned(v)
         else
           local s = get_end_path_name(v)
@@ -408,15 +409,14 @@ end
 local hooks_fired = false
 local should_kill_terminals = true
 local function rehook_helper(path, skip_terminal_kill)
-  hooks = path
 
-  local opts = lines_from(hooks)
+  local opts = lines_from(ghooks)
   statusline_protocol(opts)
 
-  if not file_exists(hooks) then
+  if not file_exists(ghooks) then
     print("hooks doesn't exist")
   else
-    vim.cmd([[autocmd InsertEnter ]] .. hooks .. [[ call PlaceSigns(-1,-1)]])
+    vim.cmd([[autocmd InsertEnter ]] .. ghooks .. [[ call PlaceSigns(-1,-1)]])
     hooks_fired = true
     should_kill_terminals = not skip_terminal_kill
   end
@@ -526,10 +526,10 @@ local function signs(n, m)
     m = 0
   end
 
-  if hooks then
+  if ghooks then
     vim.cmd(
       [[autocmd CursorMovedI,BufWritePost,BufWinEnter,TextChanged,TextChangedI,TextChangedP,InsertLeave ]]
-        .. hooks
+        .. ghooks
         .. [[ call PlaceSigns(]]
         .. n - 1
         .. [[, ]]
@@ -575,7 +575,6 @@ local function hook_file()
 
   if not path_exists(workspace) then
     setup_hook_files()
-    hooks = get_buffer_path() .. "/.hook_files/__hooks__"
   end
 
   if vim.fn.isdirectory(path) == 0 then
@@ -592,8 +591,8 @@ local function hook_file()
     end
   end
 
-  vim.cmd("e " .. hooks)
-  bufname[vim.api.nvim_get_current_buf()] = { hooks, "hooks" }
+  vim.cmd("e " .. ghooks)
+  bufname[vim.api.nvim_get_current_buf()] = { ghooks, "hooks" }
   ERROR_LINE = 0
 end
 
@@ -607,14 +606,14 @@ end
 
 local function write_hooks(n, tpath)
   local lines = {}
-  local file = io.open(hooks, "r")
+  local file = io.open(ghooks, "r")
   for line in file:lines() do
     table.insert(lines, line)
   end
   file:close()
 
   lines[n] = tpath
-  file = io.open(hooks, "w")
+  file = io.open(ghooks, "w")
   for _, line in ipairs(lines) do
     file:write(line, "\n")
   end
@@ -730,7 +729,7 @@ local function hook_mode1(n)
       end
     end
   elseif file_exists(path) then
-    if path == hooks then
+    if path == ghooks then
       print("cannot reference current hookfile")
       ERROR_LINE = n
       return
@@ -749,7 +748,7 @@ local function hook_mode1(n)
   end
 end
 
-vim.cmd([[autocmd InsertEnter hooks call PlaceSigns(-1,-1)]])
+vim.cmd([[autocmd InsertEnter ghooks call PlaceSigns(-1,-1)]])
 
 global_n = nil
 
@@ -760,17 +759,17 @@ local function hook(n)
     return
   end
 
-  if vim.fn.filereadable(hooks) == 0 then
+  if vim.fn.filereadable(ghooks) == 0 then
     print("hooks file doesn't exist or isn't readble")
     return
   end
   ERROR_LINE = 0
   vim.cmd("silent on")
-  if file_exists(hooks) == false then
+  if file_exists(ghooks) == false then
     print("HOOKS NOT FOUND")
     return
   end
-  local opts = lines_from(hooks)
+  local opts = lines_from(ghooks)
 
   if kill_flag == true then
     kill_flag = false
@@ -857,7 +856,7 @@ local function on_buffer_enter2()
     mod_flag = false
   end
 
-  local opts = lines_from(hooks)
+  local opts = lines_from(ghooks)
   statusline_protocol2(opts)
 
   if term_dict[fname()] ~= nil then
@@ -885,7 +884,7 @@ local function on_buffer_enter()
     mod_flag = false
   end
 
-  local opts = lines_from(hooks)
+  local opts = lines_from(ghooks)
   statusline_protocol(opts)
 
   if term_dict[fname()] ~= nil then
@@ -1090,7 +1089,6 @@ M = {
   on_buffer_enter = on_buffer_enter,
   fname_cleaned = fname_cleaned,
   fname_set_cleaned = fname_set_cleaned,
-  hooks = hooks,
   lines_from = lines_from,
   signs = signs,
   ERROR_LINE = ERROR_LINE,
