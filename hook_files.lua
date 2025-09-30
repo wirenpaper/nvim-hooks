@@ -10,12 +10,12 @@ path = hooks.path .. "/.hook_files/"
 marker_path = path .. M.MARKER
 
 -- Telescope requirements
-local pickers = require("telescope.pickers")
-local finders = require("telescope.finders")
-local conf = require("telescope.config").values
-local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
-local previewers = require("telescope.previewers")
+--local pickers = require("telescope.pickers")
+--local finders = require("telescope.finders")
+--local conf = require("telescope.config").values
+--local actions = require("telescope.actions")
+--local action_state = require("telescope.actions.state")
+--local previewers = require("telescope.previewers")
 
 local function workspace_dir_isempty()
   path = hooks.path .. "/.hook_files/"
