@@ -9,41 +9,41 @@ meta_names = {}
 
 local function key_map(n)
   if n == 1 then
-    return "(j)"
+    return "j)"
   elseif n == 2 then
-    return "(k)"
+    return "k)"
   elseif n == 3 then
-    return "(l)"
+    return "l)"
   elseif n == 4 then
-    return "(;)"
+    return ";)"
   elseif n == 5 then
-    return "(m)"
+    return "m)"
   elseif n == 6 then
-    return "(,)"
+    return ",)"
   elseif n == 7 then
-    return "(.)"
+    return ".)"
   elseif n == 8 then
-    return "(/)"
+    return "/)"
   end
 end
 
 local function key_map_selected(n)
   if n == 1 then
-    return "*j*"
+    return "j-"
   elseif n == 2 then
-    return "*k*"
+    return "k-"
   elseif n == 3 then
-    return "*l*"
+    return "l-"
   elseif n == 4 then
-    return "*;*"
+    return ";-"
   elseif n == 5 then
-    return "*m*"
+    return "m-"
   elseif n == 6 then
-    return "*,*"
+    return ",-"
   elseif n == 7 then
-    return "*.*"
+    return ".-"
   elseif n == 8 then
-    return "*/*"
+    return "/-"
   end
 end
 
@@ -1023,13 +1023,13 @@ end)
 vim.keymap.set("n", ",a/", function()
   hook(8)
 end)
-vim.keymap.set("n", ",as", function()
-  hook_term()
-end)
-vim.keymap.set("n", ",aa", function()
+--vim.keymap.set("n", ",as", function()
+--  hook_term()
+--end)
+vim.keymap.set("n", ",ay", function()
   copy_filename()
 end)
-vim.keymap.set("n", ",ad", function()
+vim.keymap.set("n", ",ai", function()
   hook_file()
 end)
 vim.keymap.set("n", ",an", function()
@@ -1038,7 +1038,7 @@ end, {})
 vim.keymap.set("n", ",ab", function()
   bookmarks()
 end)
-vim.keymap.set("n", ",az", function()
+vim.keymap.set("n", ",ao", function()
   normal()
 end)
 vim.keymap.set("n", ",ag", function()

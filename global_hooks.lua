@@ -9,25 +9,41 @@ gmeta_names = {}
 
 local function key_map(n)
   if n == 1 then
-    return "(u)"
+    return "a)"
   elseif n == 2 then
-    return "(i)"
+    return "s)"
   elseif n == 3 then
-    return "(o)"
+    return "d)"
   elseif n == 4 then
-    return "(p)"
+    return "f)"
+  elseif n == 5 then
+    return "z)"
+  elseif n == 6 then
+    return "x)"
+  elseif n == 7 then
+    return "c)"
+  elseif n == 8 then
+    return "v)"
   end
 end
 
 local function key_map_selected(n)
   if n == 1 then
-    return "*u*"
+    return "a-"
   elseif n == 2 then
-    return "*i*"
+    return "s-"
   elseif n == 3 then
-    return "*o*"
+    return "d-"
   elseif n == 4 then
-    return "*p*"
+    return "f-"
+  elseif n == 5 then
+    return "z-"
+  elseif n == 6 then
+    return "x-"
+  elseif n == 7 then
+    return "c-"
+  elseif n == 8 then
+    return "v-"
   end
 end
 
@@ -948,17 +964,29 @@ end
 
 -- MARK:bindings
 -- key bindings
-vim.keymap.set("n", ",au", function()
+vim.keymap.set("n", ",aa", function()
   hook(1)
 end)
-vim.keymap.set("n", ",ai", function()
+vim.keymap.set("n", ",as", function()
   hook(2)
 end)
-vim.keymap.set("n", ",ao", function()
+vim.keymap.set("n", ",ad", function()
   hook(3)
 end)
-vim.keymap.set("n", ",ap", function()
+vim.keymap.set("n", ",af", function()
   hook(4)
+end)
+vim.keymap.set("n", ",az", function()
+  hook(5)
+end)
+vim.keymap.set("n", ",ax", function()
+  hook(6)
+end)
+vim.keymap.set("n", ",ac", function()
+  hook(7)
+end)
+vim.keymap.set("n", ",av", function()
+  hook(8)
 end)
 
 local function set_false_bookmarks_flag()
