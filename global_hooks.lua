@@ -29,21 +29,21 @@ end
 
 local function key_map_selected(n)
   if n == 1 then
-    return "a-"
+    return "a→"
   elseif n == 2 then
-    return "s-"
+    return "s→"
   elseif n == 3 then
-    return "d-"
+    return "d→"
   elseif n == 4 then
-    return "f-"
+    return "f→"
   elseif n == 5 then
-    return "z-"
+    return "z→"
   elseif n == 6 then
-    return "x-"
+    return "x→"
   elseif n == 7 then
-    return "c-"
+    return "c→"
   elseif n == 8 then
-    return "v-"
+    return "v→"
   end
 end
 
