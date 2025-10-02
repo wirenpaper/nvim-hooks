@@ -1074,7 +1074,7 @@ function bookmarks()
     local mark_name = line:match("MARK:(%S+)")
     if mark_name then
       table.insert(marks, mark_name)
-      vim.o.tabline = vim.o.tabline .. " " .. '%#TabKeyStyled#' .. key_map(count) .. '%*' .. " " .. mark_name
+      vim.o.tabline = vim.o.tabline .. " " .. '%#TabKeyLetter#' .. key_map(count) .. '%*' .. " " .. mark_name
 
       if count == 8 then
 	break
