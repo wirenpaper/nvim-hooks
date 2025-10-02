@@ -357,7 +357,7 @@ function tmux_protocol2(opts)
   end
 end
 
--- MARK:tmux_protocol1
+-- MARK:tmux_protocol
 function tmux_protocol(opts)
   gropts = opts
 
@@ -1122,7 +1122,7 @@ vim.api.nvim_create_user_command(
     end
     
     -- Search for the pattern
-    local search_pattern = "MARK:" .. query
+    local search_pattern = "MARK:" .. query .. "\\>"
     
     -- Save current cursor position
     local cursor_pos = vim.api.nvim_win_get_cursor(0)
@@ -1131,7 +1131,7 @@ vim.api.nvim_create_user_command(
     vim.api.nvim_win_set_cursor(0, {1, 0})
     
     -- Use vim's search function
-    local found = vim.fn.search(vim.fn.escape(search_pattern, '/\\'), 'W')
+    local found = vim.fn.search(search_pattern, 'W')
     
     if found > 0 then
       vim.notify("Jumped to MARK: " .. query, vim.log.levels.INFO)
