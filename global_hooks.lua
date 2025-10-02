@@ -225,15 +225,15 @@ local function fname_set_cleaned2(file)
   local path, args = format_path(file)
   if fname_aux_set(path)[2] == "file" then
     if args == nil then
-      return " " .. get_end_path_name(path) .. "@ "
+      return get_end_path_name(path) .. "@"
     else
-      return " " .. get_end_path_name(path) .. "@ -" .. args .. " "
+      return get_end_path_name(path) .. "@ -" .. args
     end
   else
     if args == nil then
-      return " " .. get_end_path_name(path) .. "/ "
+      return get_end_path_name(path) .. "/"
     else
-      return " " .. get_end_path_name(path) .. "/ -" .. args .. " "
+      return get_end_path_name(path) .. "/ -" .. args
     end
   end
 end
@@ -316,18 +316,18 @@ local function statusline_protocol2(opts)
         end
         if v ~= "" and key_map(n) ~= key_map(i) then
           if not string.match(get_end_path_name(ghooks), "__workspaces__") then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
           else
             local s = get_end_path_name(v)
             s = string.sub(s, 2, -2)
             if s == ws then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
             else
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
             end
           end
         elseif v ~= "" and key_map(n) == key_map(i) then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
         end
       end
     end
@@ -377,18 +377,18 @@ local function statusline_protocol(opts)
       end
       if v ~= "" and key_map(n) ~= key_map(i) then
         if not string.match(get_end_path_name(ghooks), "__workspaces__") then
-	  tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
+	  tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
         else
           local s = get_end_path_name(v)
           s = string.sub(s, 2, -2)
           if s == ws then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
           else
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
           end
         end
       elseif v ~= "" and key_map(n) == key_map(i) then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
+	tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
       end
     end
   end
@@ -962,7 +962,6 @@ local function register_autocommands()
   vim.api.nvim_create_autocmd("BufWritePost", { callback = on_buf_save })
 end
 
--- MARK:bindings
 -- key bindings
 vim.keymap.set("n", ",aa", function()
   hook(1)
