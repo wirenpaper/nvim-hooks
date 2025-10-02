@@ -301,7 +301,7 @@ function poll_for_value(producer_func, on_success_callback)
   )
 end
 
--- MARK:tmux_protocol2
+-- MARK:tmux_protocol
 function tmux_protocol2(opts)
   gropts = opts
 
@@ -357,7 +357,7 @@ function tmux_protocol2(opts)
   end
 end
 
--- MARK:tmux_protocol
+-- MARK:tmux_protocol1
 function tmux_protocol(opts)
   gropts = opts
 
@@ -1189,5 +1189,10 @@ M = {
   key_map = key_map,
   register_autocommands = register_autocommands,
 }
+
+
+vim.api.nvim_set_hl(0, 'TabKeyLetter', {
+  underdashed = true,
+})
 
 return M
