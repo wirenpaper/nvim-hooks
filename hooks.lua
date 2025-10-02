@@ -301,6 +301,7 @@ function poll_for_value(producer_func, on_success_callback)
   )
 end
 
+-- MARK:tmux_protocol2
 function tmux_protocol2(opts)
   gropts = opts
 
@@ -356,6 +357,7 @@ function tmux_protocol2(opts)
   end
 end
 
+-- MARK:tmux_protocol1
 function tmux_protocol(opts)
   gropts = opts
 
