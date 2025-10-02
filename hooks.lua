@@ -319,18 +319,18 @@ function tmux_protocol2(opts)
         end
         if v ~= "" and key_map(n) ~= key_map(i) then
           if not string.match(get_end_path_name(hooks), "__workspaces__") then
-	    tmux_string = tmux_string .. key_map(i) .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
           else
             local s = get_end_path_name(v)
             s = string.sub(s, 2, -2)
             if s == ws then
-	    tmux_string = tmux_string .. key_map_selected(i) .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
             else
-	    tmux_string = tmux_string .. key_map(i) .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
             end
           end
         elseif v ~= "" and key_map(n) == key_map(i) then
-	    tmux_string = tmux_string .. key_map_selected(i) .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
         end
       end
     end
@@ -380,18 +380,18 @@ function tmux_protocol(opts)
       end
       if v ~= "" and key_map(n) ~= key_map(i) then
         if not string.match(get_end_path_name(hooks), "__workspaces__") then
-	  tmux_string = tmux_string .. key_map(i) .. fname_set_cleaned2(v)
+	  tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
         else
           local s = get_end_path_name(v)
           s = string.sub(s, 2, -2)
           if s == ws then
-	    tmux_string = tmux_string .. key_map_selected(i) .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
           else
-	    tmux_string = tmux_string .. key_map(i) .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. fname_set_cleaned2(v)
           end
         end
       elseif v ~= "" and key_map(n) == key_map(i) then
-	   tmux_string = tmux_string .. key_map_selected(i) .. fname_set_cleaned2(v)
+	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. '%#Search#' .. fname_set_cleaned2(v) .. '%*'
       end
     end
   end
