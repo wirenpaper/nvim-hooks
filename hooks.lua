@@ -1063,6 +1063,7 @@ end
 
 bookmarks_flag = false
 marks = nil
+-- MARK:bookmarks
 function bookmarks()
   bookmarks_flag = true
   marks = {}
