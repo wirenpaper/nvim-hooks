@@ -230,13 +230,13 @@ local function fname_set_cleaned2(file)
     if args == nil then
       return get_end_path_name(path) .. "@"
     else
-      return get_end_path_name(path) .. "@ -" .. args
+      return get_end_path_name(path) .. "@" .. args
     end
   else
     if args == nil then
       return get_end_path_name(path) .. "/"
     else
-      return get_end_path_name(path) .. "/ -" .. args
+      return get_end_path_name(path) .. "/" .. args
     end
   end
 end
