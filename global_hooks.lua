@@ -9,41 +9,41 @@ gmeta_names = {}
 
 local function key_map(n)
   if n == 1 then
-    return "a)"
+    return "a"
   elseif n == 2 then
-    return "s)"
+    return "s"
   elseif n == 3 then
-    return "d)"
+    return "d"
   elseif n == 4 then
-    return "f)"
+    return "f"
   elseif n == 5 then
-    return "z)"
+    return "z"
   elseif n == 6 then
-    return "x)"
+    return "x"
   elseif n == 7 then
-    return "c)"
+    return "c"
   elseif n == 8 then
-    return "v)"
+    return "v"
   end
 end
 
 local function key_map_selected(n)
   if n == 1 then
-    return "a→"
+    return "a"
   elseif n == 2 then
-    return "s→"
+    return "s"
   elseif n == 3 then
-    return "d→"
+    return "d"
   elseif n == 4 then
-    return "f→"
+    return "f"
   elseif n == 5 then
-    return "z→"
+    return "z"
   elseif n == 6 then
-    return "x→"
+    return "x"
   elseif n == 7 then
-    return "c→"
+    return "c"
   elseif n == 8 then
-    return "v→"
+    return "v"
   end
 end
 
@@ -138,7 +138,7 @@ workspace = path .. "/.hook_files"
 ws = nil
 ghooks = path .. "/.hook_files/__global__" 
 
-vim.o.showtabline = 2
+--vim.o.showtabline = 2
 local function fname_aux()
   local file = gbufname[vim.api.nvim_get_current_buf()]
   if file == nil then
@@ -225,9 +225,11 @@ local function fname_set_cleaned2(file)
   local path, args = format_path(file)
   if fname_aux_set(path)[2] == "file" then
     if args == nil then
-      return get_end_path_name(path) .. "@"
+      --return get_end_path_name(path) .. "@"
+      return get_end_path_name(path) .. ""
     else
-      return get_end_path_name(path) .. "@" .. args
+      --return get_end_path_name(path) .. "@" .. args
+      return get_end_path_name(path) .. "" .. args
     end
   else
     if args == nil then
@@ -316,22 +318,23 @@ local function statusline_protocol2(opts)
         end
         if v ~= "" and key_map(n) ~= key_map(i) then
           if not string.match(get_end_path_name(ghooks), "__workspaces__") then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
+	    tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
           else
             local s = get_end_path_name(v)
             s = string.sub(s, 2, -2)
             if s == ws then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
+	    tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
             else
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
+	    tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
             end
           end
         elseif v ~= "" and key_map(n) == key_map(i) then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
+	    tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
         end
       end
     end
     vim.o.statusline = tmux_string
+    --vim.o.winbar = tmux_string
   end
 
   -- This block now determines HOW to get the line number 'n', and then passes
@@ -377,22 +380,23 @@ local function statusline_protocol(opts)
       end
       if v ~= "" and key_map(n) ~= key_map(i) then
         if not string.match(get_end_path_name(ghooks), "__workspaces__") then
-	  tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
+	  tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
         else
           local s = get_end_path_name(v)
           s = string.sub(s, 2, -2)
           if s == ws then
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
+	    tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
           else
-	    tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map(i) .. '%*' .. " " .. fname_set_cleaned2(v) .. " "
+	    tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map(i) .. '%*' .. "" .. fname_set_cleaned2(v) .. ""
           end
         end
       elseif v ~= "" and key_map(n) == key_map(i) then
-	tmux_string = tmux_string .. '%#TabKeyLetter#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
+	tmux_string = tmux_string .. '%#TabKeyLetter2#' .. key_map_selected(i) .. '%*' .. " " .. '%#Search#' .. fname_set_cleaned2(v) .. '%*' .. " "
       end
     end
   end
   vim.o.statusline = tmux_string
+  --vim.o.winbar = tmux_string
 end
 
 local function pfname_aux()

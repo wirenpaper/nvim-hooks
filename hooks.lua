@@ -9,41 +9,42 @@ meta_names = {}
 
 local function key_map(n)
   if n == 1 then
-    return "j)"
+    return "j"
   elseif n == 2 then
-    return "k)"
+    return "k"
   elseif n == 3 then
-    return "l)"
+    return "l"
   elseif n == 4 then
-    return ";)"
+    return ";"
   elseif n == 5 then
-    return "m)"
+    return "m"
   elseif n == 6 then
-    return ",)"
+    return ","
   elseif n == 7 then
-    return ".)"
+    return "."
   elseif n == 8 then
-    return "/)"
+    return "/"
   end
 end
 
 local function key_map_selected(n)
   if n == 1 then
-    return "j→"
+    --return "j→"
+    return "j"
   elseif n == 2 then
-    return "k→"
+    return "k"
   elseif n == 3 then
-    return "l→"
+    return "l"
   elseif n == 4 then
-    return ";→"
+    return ";"
   elseif n == 5 then
-    return "m→"
+    return "m"
   elseif n == 6 then
-    return ",→"
+    return ","
   elseif n == 7 then
-    return ".→"
+    return "."
   elseif n == 8 then
-    return "/→"
+    return "/"
   end
 end
 
@@ -141,7 +142,7 @@ if path_exists(path .. "/.hook_files") then
   hooks = path .. "/.hook_files/" .. utils.file_content(path .. "/.hook_files/__f__")
 end
 
-vim.o.showtabline = 2
+--vim.o.showtabline = 2
 local function fname_aux()
   local file = bufname[vim.api.nvim_get_current_buf()]
   if file == nil then
@@ -228,9 +229,11 @@ local function fname_set_cleaned2(file)
   local path, args = format_path(file)
   if fname_aux_set(path)[2] == "file" then
     if args == nil then
-      return get_end_path_name(path) .. "@"
+      --return get_end_path_name(path) .. "@"
+      return get_end_path_name(path) .. ""
     else
-      return get_end_path_name(path) .. "@" .. args
+      --return get_end_path_name(path) .. "@" .. args
+      return get_end_path_name(path) .. "" .. args
     end
   else
     if args == nil then
@@ -335,7 +338,8 @@ function tmux_protocol2(opts)
         end
       end
     end
-    vim.o.tabline = tmux_string
+    --vim.o.tabline = tmux_string
+    vim.o.winbar = tmux_string
   end
 
   -- This block now determines HOW to get the line number 'n', and then passes
@@ -397,7 +401,8 @@ function tmux_protocol(opts)
       end
     end
   end
-  vim.o.tabline = tmux_string
+  --vim.o.tabline = tmux_string
+  vim.o.winbar = tmux_string
 end
 
 local function pfname_aux()
@@ -1068,13 +1073,15 @@ function bookmarks()
   -- Get lines from current buffer only
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   
-  vim.o.tabline = ""
+  --vim.o.tabline = ""
+  vim.o.winbar = ""
   local count = 1
   for _, line in ipairs(lines) do
     local mark_name = line:match("MARK:(%S+)")
     if mark_name then
       table.insert(marks, mark_name)
-      vim.o.tabline = vim.o.tabline .. " " .. '%#TabKeyLetter#' .. key_map(count) .. '%*' .. " " .. mark_name
+      --vim.o.tabline = vim.o.tabline .. " " .. '%#TabKeyLetter#' .. key_map(count) .. '%*' .. " " .. mark_name
+      vim.o.winbar = vim.o.winbar .. " " .. '%#TabKeyLetter#' .. key_map(count) .. '%*' .. " " .. mark_name
 
       if count == 8 then
 	break
@@ -1189,6 +1196,13 @@ M = {
 
 vim.api.nvim_set_hl(0, 'TabKeyLetter', {
   underdashed = true,
+  fg = 'darkred',
+  bg = 'lightgray',
+})
+vim.api.nvim_set_hl(0, 'TabKeyLetter2', {
+  underdashed = true,
+  fg = 'darkred',
+  bg = 'lightgray',
 })
 
 return M
