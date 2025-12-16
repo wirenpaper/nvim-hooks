@@ -524,6 +524,7 @@ vim.keymap.set("n", " ae", function()
   hooks.set_false_bookmarks_flag()
   local workspaces_file = hooks.path .. "/.hook_files/__workspaces__"
 
+  vim.o.winbar = tmux_string
   -- Check if __workspaces__ file exists
   if not file_exists(workspaces_file) then
     -- Create empty __workspaces__ file

@@ -3,48 +3,67 @@ local utils = require("utilities")
 
 local M = {}
 
+
 term_dict = {}
 bufname = {}
 meta_names = {}
 
+local function get_current_workspace()
+  -- 1. Construct the path to the __f__ file
+  -- 'hooks.path' is exposed in the M table at the end of hooks.lua
+  local marker_path = hooks.path .. "/.hook_files/__f__"
+  
+  -- 2. Open the file in read mode
+  local f = io.open(marker_path, "r")
+  
+  if f then
+    -- 3. Read the entire first line (which is the workspace name)
+    local workspace_name = f:read("*l") -- *l reads line, *a reads all
+    f:close()
+    return workspace_name
+  else
+    return nil -- File doesn't exist or directory not initialized
+  end
+end
+
 local function key_map(n)
   if n == 1 then
-    return "j"
+    return "j)"
   elseif n == 2 then
-    return "k"
+    return "k)"
   elseif n == 3 then
-    return "l"
+    return "l)"
   elseif n == 4 then
-    return ";"
+    return ";)"
   elseif n == 5 then
-    return "m"
+    return "m)"
   elseif n == 6 then
-    return ","
+    return ",)"
   elseif n == 7 then
-    return "."
+    return ".)"
   elseif n == 8 then
-    return "/"
+    return "/)"
   end
 end
 
 local function key_map_selected(n)
   if n == 1 then
     --return "j→"
-    return "j"
+    return "j→"
   elseif n == 2 then
-    return "k"
+    return "k→"
   elseif n == 3 then
-    return "l"
+    return "l→"
   elseif n == 4 then
-    return ";"
+    return ";→"
   elseif n == 5 then
-    return "m"
+    return "m→"
   elseif n == 6 then
-    return ","
+    return ",→"
   elseif n == 7 then
-    return "."
+    return ".→"
   elseif n == 8 then
-    return "/"
+    return "/→"
   end
 end
 
@@ -305,6 +324,7 @@ function poll_for_value(producer_func, on_success_callback)
 end
 
 -- MARK:tmux_protocol2
+global_tmux_string = ""
 function tmux_protocol2(opts)
   gropts = opts
 
@@ -475,11 +495,11 @@ local function rehook_helper(path, skip_terminal_kill)
 end
 
 function rehook(path, skip_terminal_kill)
-  if is_modified() == false then
+  --if is_modified() == false then
     rehook_helper(path, skip_terminal_kill)
-  else
-    print("save modified buffers")
-  end
+  --else
+    --print("save modified buffers")
+  --end
 end
 
 local function rehook_force()
@@ -869,6 +889,7 @@ local function hook(n)
     local workspace_name = string.sub(path, 2, -2)
     -- Switch to workspace using the same function telescope calls
     hookfiles(workspace_name)
+    vim.o.statusline = "<" .. workspace_name .. ">" .. " " .. global_tmux_string
     return
   end
 
@@ -1179,6 +1200,7 @@ end
 M = {
   set_false_bookmarks_flag = set_false_bookmarks_flag,
   is_bookmarks_flag,
+  global_tmux_string,
   normal = normal,
   rehook = rehook,
   path = path,

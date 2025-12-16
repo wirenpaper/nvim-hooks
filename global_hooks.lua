@@ -3,47 +3,67 @@ local hooks = require("hooks")
 local utils = require("utilities")
 local M = {}
 
+local hooks = require("hooks") -- Require your hooks module to get the base path
+
+local function get_current_workspace()
+  -- 1. Construct the path to the __f__ file
+  -- 'hooks.path' is exposed in the M table at the end of hooks.lua
+  local marker_path = hooks.path .. "/.hook_files/__f__"
+  
+  -- 2. Open the file in read mode
+  local f = io.open(marker_path, "r")
+  
+  if f then
+    -- 3. Read the entire first line (which is the workspace name)
+    local workspace_name = f:read("*l") -- *l reads line, *a reads all
+    f:close()
+    return workspace_name
+  else
+    return nil -- File doesn't exist or directory not initialized
+  end
+end
+
 gterm_dict = {}
 gbufname = {}
 gmeta_names = {}
 
 local function key_map(n)
   if n == 1 then
-    return "a"
+    return "a)"
   elseif n == 2 then
-    return "s"
+    return "s)"
   elseif n == 3 then
-    return "d"
+    return "d)"
   elseif n == 4 then
-    return "f"
+    return "f)"
   elseif n == 5 then
-    return "z"
+    return "z)"
   elseif n == 6 then
-    return "x"
+    return "x)"
   elseif n == 7 then
-    return "c"
+    return "c)"
   elseif n == 8 then
-    return "v"
+    return "v)"
   end
 end
 
 local function key_map_selected(n)
   if n == 1 then
-    return "a"
+    return "a→"
   elseif n == 2 then
-    return "s"
+    return "s→"
   elseif n == 3 then
-    return "d"
+    return "d→"
   elseif n == 4 then
-    return "f"
+    return "f→"
   elseif n == 5 then
-    return "z"
+    return "z→"
   elseif n == 6 then
-    return "x"
+    return "x→"
   elseif n == 7 then
-    return "c"
+    return "c→"
   elseif n == 8 then
-    return "v"
+    return "v→"
   end
 end
 
@@ -333,7 +353,8 @@ local function statusline_protocol2(opts)
         end
       end
     end
-    vim.o.statusline = tmux_string
+    vim.o.statusline = "<" .. get_current_workspace() .. ">" .. " " .. tmux_string
+    global_tmux_string = tmux_string
     --vim.o.winbar = tmux_string
   end
 
@@ -395,7 +416,9 @@ local function statusline_protocol(opts)
       end
     end
   end
-  vim.o.statusline = tmux_string
+  --vim.o.statusline = "<" .. get_current_workspace() .. ">" .. " " .. tmux_string
+  vim.o.statusline = "<" .. (get_current_workspace() or "") .. ">" .. " " .. (tmux_string or "")
+  global_tmux_string = tmux_string
   --vim.o.winbar = tmux_string
 end
 
@@ -837,6 +860,7 @@ local function hook(n)
     local workspace_name = string.sub(path, 2, -2)
     -- Switch to workspace using the same function telescope calls
     hookfiles(workspace_name)
+    vim.o.statusline = "<" .. workspace_name .. ">" .. " " .. global_tmux_string
     return
   end
 
