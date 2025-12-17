@@ -1,4 +1,5 @@
-package.path = package.path .. ";/home/saifr/.config/nvim/plugin/hooks/?.lua"
+--package.path = package.path .. ";/home/saifr/.config/nvim/plugin/hooks/?.lua"
+package.path = package.path .. ";" .. os.getenv("HOME") .. "/.config/nvim/plugin/hooks/?.lua"
 local utils = require("utilities")
 
 local M = {}
