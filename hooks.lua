@@ -1217,15 +1217,7 @@ M = {
   register_autocommands = register_autocommands,
 }
 
-vim.api.nvim_set_hl(0, 'TabKeyLetter', {
-  underdashed = true,
-  fg = 'darkred',
-  bg = 'lightgray',
-})
-vim.api.nvim_set_hl(0, 'TabKeyLetter2', {
-  underdashed = true,
-  fg = 'darkred',
-  bg = 'lightgray',
-})
+vim.api.nvim_set_hl(0, 'TabKeyLetter', { underdashed = true, })
+vim.api.nvim_set_hl(0, 'TabKeyLetter2', { underdashed = true, })
 
 return M
