@@ -1220,4 +1220,13 @@ M = {
 vim.api.nvim_set_hl(0, 'TabKeyLetter', { underdashed = true, })
 vim.api.nvim_set_hl(0, 'TabKeyLetter2', { underdashed = true, })
 
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = group,
+  pattern = "*", -- Runs for any colorscheme
+  callback = function()
+    vim.api.nvim_set_hl(0, 'TabKeyLetter', { underdashed = true })
+    vim.api.nvim_set_hl(0, 'TabKeyLetter2', { underdashed = true })
+  end,
+})
+
 return M
